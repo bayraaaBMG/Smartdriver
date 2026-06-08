@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartDriver UB — Дүрмийн Тест</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0f13;
+  --card:#17171f;
+  --border:#2a2a38;
+  --text:#f0eeea;
+  --muted:#6b6880;
+  --accent:#f5c842;
+  --green:#22c55e;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --font-h:'Raleway',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height:100vh;overflow-x:hidden}
+
+/* ── MENU ── */
+#menu-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:2rem;text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(245,200,66,0.08),transparent 70%);
+}
+.logo-mark{
+  font-size:clamp(3rem,8vw,6rem);font-weight:900;line-height:1;
+  letter-spacing:-0.04em;margin-bottom:0.5rem;
+}
+.logo-mark span{color:var(--accent)}
+.logo-sub{font-family:var(--font-m);font-size:0.75rem;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:3rem}
+.menu-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;max-width:900px;width:100%;margin-bottom:2rem}
+.mode-card{
+  background:var(--card);border:1.5px solid var(--border);
+  padding:2rem;text-align:left;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.mode-card::after{
+  content:'';position:absolute;inset:0;
+  background:var(--hover-bg,rgba(245,200,66,0.04));
+  opacity:0;transition:opacity .2s;
+}
+.mode-card:hover{border-color:var(--hover-c,var(--accent));transform:translateY(-3px)}
+.mode-card:hover::after{opacity:1}
+.mc-icon{font-size:2.5rem;margin-bottom:1rem}
+.mc-title{font-weight:900;font-size:1.15rem;margin-bottom:0.4rem}
+.mc-desc{font-size:0.82rem;color:var(--muted);line-height:1.6}
+.mc-badge{
+  position:absolute;top:1rem;right:1rem;
+  font-family:var(--font-m);font-size:0.6rem;padding:3px 8px;
+  border-radius:2px;font-weight:700;
+}
+.badge-hot{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+.badge-new{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+.badge-all{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+.stats-row{display:flex;gap:2.5rem;justify-content:center;margin-top:1rem}
+.stat-item{text-align:center}
+.stat-n{font-family:var(--font-m);font-size:1.6rem;font-weight:700;color:var(--accent)}
+.stat-l{font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+
+/* ── CARD SELECTOR ── */
+#card-select-screen{display:none;min-height:100vh;padding:2rem;max-width:1200px;margin:0 auto}
+.back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-m);font-size:0.72rem;color:var(--muted);
+  cursor:pointer;margin-bottom:2rem;transition:color .15s;
+  background:none;border:none;letter-spacing:0.05em;
+}
+.back-btn:hover{color:var(--text)}
+.cs-title{font-weight:900;font-size:2rem;margin-bottom:0.3rem}
+.cs-sub{color:var(--muted);margin-bottom:2rem;font-size:0.88rem}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.6rem}
+.card-pill{
+  background:var(--card);border:1.5px solid var(--border);
+  padding:0.8rem;text-align:center;cursor:pointer;
+  font-weight:700;font-size:0.88rem;
+  transition:all .15s;
+}
+.card-pill:hover{border-color:var(--accent);color:var(--accent)}
+.card-pill.done{border-color:var(--green);color:var(--green)}
+
+/* ── QUIZ SCREEN ── */
+#quiz-screen{display:none;min-height:100vh;background:var(--bg)}
+.quiz-header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(15,15,19,0.95);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:0.75rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;
+}
+.quiz-back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;transition:color .15s;flex-shrink:0}
+.quiz-back:hover{color:var(--text)}
+.quiz-progress-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.quiz-counter{font-family:var(--font-m);font-size:0.72rem;color:var(--muted);white-space:nowrap}
+.quiz-timer{font-family:var(--font-m);font-size:0.88rem;font-weight:700;min-width:50px;text-align:right}
+.quiz-timer.warn{color:var(--red);animation:timerPulse .5s ease infinite alternate}
+@keyframes timerPulse{from{opacity:1}to{opacity:0.4}}
+
+/* ── QUESTION AREA ── */
+.q-wrap{max-width:760px;margin:0 auto;padding:1.5rem}
+.q-card-label{font-family:var(--font-m);font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem}
+/* Image container */
+.q-images{
+  display:grid;gap:0.5rem;margin-bottom:1.5rem;
+  border-radius:4px;overflow:hidden;
+  border:1.5px solid var(--border);
+  background:var(--card);
+}
+.q-images.two-img{grid-template-columns:1fr 1fr}
+.q-images.one-img{grid-template-columns:1fr}
+.q-img{
+  width:100%;display:block;
+  object-fit:contain;max-height:340px;
+  background:transparent;
+  cursor:zoom-in;
+  opacity:0;
+  transition:opacity .3s;
+}
+.img-loading{
+  position:absolute;font-family:var(--font-m);font-size:0.72rem;
+  color:var(--muted);text-align:center;pointer-events:none;
+  padding:1rem;
+}
+.img-placeholder{
+  width:100%;padding:2.5rem 1rem;background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:0.4rem;color:var(--muted);
+  font-size:0.78rem;text-align:center;
+}
+/* Question text */
+.q-number-badge{
+  display:inline-block;font-family:var(--font-m);font-size:0.65rem;
+  color:var(--accent);background:rgba(245,200,66,0.1);
+  padding:2px 8px;border-radius:2px;margin-bottom:0.5rem;
+  border:1px solid rgba(245,200,66,0.2);
+}
+.q-text{font-weight:700;font-size:1.05rem;line-height:1.5;margin-bottom:1.2rem;color:var(--text)}
+/* Options */
+.q-options{display:flex;flex-direction:column;gap:0.5rem}
+.q-opt{
+  display:flex;align-items:center;gap:0.8rem;
+  background:rgba(255,255,255,0.03);
+  border:1.5px solid var(--border);
+  padding:0.9rem 1.1rem;cursor:pointer;
+  font-size:0.92rem;font-weight:600;
+  transition:all .12s;color:var(--text);
+  text-align:left;width:100%;font-family:var(--font-h);
+  border-radius:3px;
+  position:relative;overflow:hidden;
+}
+.q-opt::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--opt-c,transparent);transition:background .15s;
+}
+.q-opt:hover:not(:disabled){
+  border-color:rgba(245,200,66,0.5);
+  background:rgba(245,200,66,0.06);
+  transform:translateX(3px);
+}
+.q-opt:hover:not(:disabled)::before{background:var(--accent)}
+.q-opt:disabled{cursor:default}
+.q-opt.correct{
+  border-color:var(--green)!important;
+  background:rgba(34,197,94,0.1)!important;
+  color:var(--green);
+  --opt-c:var(--green);
+  transform:none!important;
+}
+.q-opt.wrong{
+  border-color:var(--red)!important;
+  background:rgba(239,68,68,0.08)!important;
+  color:var(--red);
+  --opt-c:var(--red);
+}
+.opt-key{
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,0.07);
+  font-family:var(--font-m);font-size:0.68rem;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .12s;
+}
+.q-opt.correct .opt-key{background:var(--green);color:#fff}
+.q-opt.wrong .opt-key{background:var(--red);color:#fff}
+/* Explanation */
+.q-explain{
+  margin-top:0.8rem;padding:0.9rem 1rem;border-radius:3px;
+  font-size:0.83rem;line-height:1.65;display:none;
+  border-left:3px solid var(--explain-c,var(--green));
+  background:var(--explain-bg,rgba(34,197,94,0.06));
+  color:rgba(240,238,234,0.8);
+}
+.q-explain.show{display:flex;gap:0.7rem;align-items:flex-start}
+.q-explain-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+/* Nav */
+.q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border)}
+.q-nav-info{font-family:var(--font-m);font-size:0.7rem;color:var(--muted)}
+.btn-next{
+  background:var(--accent);color:#0f0f13;
+  padding:10px 24px;font-weight:900;font-size:0.82rem;
+  letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;border:none;transition:all .15s;
+  display:none;
+}
+.btn-next:hover{background:#ffd700;transform:translateX(2px)}
+/* Dot track */
+.dot-track{display:flex;gap:3px;flex-wrap:wrap;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border)}
+.dot{width:20px;height:5px;border-radius:2px;background:var(--border);transition:background .2s;cursor:pointer}
+.dot.ans-correct{background:var(--green)}
+.dot.ans-wrong{background:var(--red)}
+.dot.cur{background:var(--accent)}
+
+/* ── RESULTS ── */
+#result-screen{display:none;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+.result-ring{
+  width:160px;height:160px;border-radius:50%;
+  border:5px solid var(--ring-c,var(--accent));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto 1.5rem;
+  position:relative;
+}
+.result-ring::after{
+  content:'';position:absolute;inset:-12px;border-radius:50%;
+  border:2px solid var(--ring-c,rgba(245,200,66,0.2));
+  animation:ringPulse 2s ease infinite;
+}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.4}}
+.result-big{font-family:var(--font-m);font-weight:700;font-size:3rem;line-height:1}
+.result-of{font-size:0.72rem;color:var(--muted)}
+.result-title{font-weight:900;font-size:2rem;margin-bottom:0.4rem}
+.result-sub{color:var(--muted);margin-bottom:2rem;font-size:0.92rem}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;max-width:420px;margin:0 auto 2rem}
+.rg-item{background:var(--card);border:1px solid var(--border);padding:1rem;border-radius:3px}
+.rg-n{font-family:var(--font-m);font-weight:700;font-size:1.8rem;line-height:1}
+.rg-l{font-size:0.68rem;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em}
+.result-actions{display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap}
+.btn-retry{background:var(--accent);color:#0f0f13;padding:12px 28px;font-weight:900;font-size:0.88rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s}
+.btn-retry:hover{background:#ffd700}
+.btn-menu{background:transparent;color:var(--muted);padding:12px 28px;font-weight:700;font-size:0.88rem;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);transition:all .15s;font-family:var(--font-h)}
+.btn-menu:hover{border-color:var(--text);color:var(--text)}
+/* Wrong list */
+.wrong-list{max-width:600px;width:100%;margin:0 auto 2rem;text-align:left}
+.wrong-list-title{font-family:var(--font-m);font-size:0.7rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem}
+.wrong-item{background:var(--card);border:1px solid rgba(239,68,68,0.2);padding:0.6rem 0.8rem;margin-bottom:0.4rem;border-radius:3px;font-size:0.8rem;color:rgba(240,238,234,0.7)}
+.wrong-item strong{color:var(--red);font-family:var(--font-m)}
+
+/* ── FOCUS MODE overlay ── */
+#focus-flash{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0;background:rgba(245,200,66,0.05);transition:opacity .15s}
+
+/* ── IMAGE ZOOM ── */
+#img-zoom{
+  position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.92);
+  display:none;align-items:center;justify-content:center;cursor:zoom-out;
+  padding:1rem;
+}
+#img-zoom.open{display:flex}
+#img-zoom img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:3px}
+
+/* ── HOT 20 SCREEN ── */
+#hot20-screen{display:none;min-height:100vh;padding:2rem;max-width:800px;margin:0 auto}
+.hot20-card{
+  background:var(--card);border:1.5px solid var(--border);
+  padding:1.2rem 1.5rem;margin-bottom:0.6rem;border-radius:3px;
+  display:flex;align-items:flex-start;gap:1rem;
+  transition:border-color .15s;cursor:pointer;
+}
+.hot20-card:hover{border-color:var(--accent)}
+.hot20-n{
+  font-family:var(--font-m);font-size:0.7rem;color:var(--accent);
+  background:rgba(245,200,66,0.1);padding:3px 8px;border-radius:2px;
+  flex-shrink:0;margin-top:1px;
+}
+.hot20-q{font-size:0.88rem;font-weight:600;flex:1;line-height:1.5}
+.hot20-freq{font-family:var(--font-m);font-size:0.68rem;color:var(--muted);flex-shrink:0;text-align:right}
+.freq-bar{height:3px;border-radius:2px;background:var(--accent);margin-top:3px}
+
+/* ── SIMULATOR ── */
+#sim-screen{display:none;min-height:100vh;background:#0a0a10;flex-direction:column}
+.sim-topbar{
+  background:#111118;border-bottom:1px solid #2a2a38;
+  padding:0.6rem 1.2rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;
+}
+.sim-back{background:none;border:none;color:#6b6880;cursor:pointer;font-size:1rem;transition:color .15s}
+.sim-back:hover{color:#f0eeea}
+.sim-title{font-family:var(--font-m);font-size:0.72rem;color:#f5c842;letter-spacing:0.12em;text-transform:uppercase}
+.sim-sep{color:#2a2a38;font-size:0.8rem}
+.sim-task-label{font-size:0.75rem;color:rgba(240,238,234,0.55);flex:1}
+.sim-score-hud{
+  font-family:var(--font-m);font-size:0.72rem;color:#f0eeea;
+  background:#17171f;border:1px solid #2a2a38;padding:4px 12px;border-radius:3px;
+  display:flex;gap:0.8rem;align-items:center;
+}
+.sim-score-hud span{color:#f5c842;font-weight:700;font-size:0.88rem}
+/* scenario grid */
+#sim-scenario-screen{
+  display:none;min-height:100vh;background:#0a0a10;padding:2rem;
+  flex-direction:column;
+}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-top:1.5rem}
+.sc-card{
+  background:#17171f;border:1.5px solid #2a2a38;padding:1.5rem;
+  cursor:pointer;transition:all .2s;border-radius:3px;position:relative;overflow:hidden;
+}
+.sc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sc-c,#f5c842);transform:scaleY(0);transform-origin:bottom;transition:transform .2s}
+.sc-card:hover:not(.locked){border-color:var(--sc-c,#f5c842);transform:translateY(-3px)}
+.sc-card:hover:not(.locked)::before{transform:scaleY(1)}
+.sc-card.locked{opacity:0.4;cursor:not-allowed}
+.sc-card.cleared{border-color:#22c55e}
+.sc-card.cleared::after{content:'✓';position:absolute;top:0.8rem;right:0.8rem;color:#22c55e;font-weight:900;font-size:0.9rem}
+.sc-icon{font-size:2rem;margin-bottom:0.7rem}
+.sc-name{font-weight:900;font-size:0.95rem;color:#f0eeea;margin-bottom:0.3rem}
+.sc-desc{font-size:0.78rem;color:#6b6880;line-height:1.55;margin-bottom:0.7rem}
+.sc-diff{font-family:var(--font-m);font-size:0.6rem;padding:2px 7px;border-radius:2px;font-weight:700}
+.diff-easy{background:rgba(34,197,94,0.12);color:#4ade80}
+.diff-med{background:rgba(245,200,66,0.12);color:#f5c842}
+.diff-hard{background:rgba(239,68,68,0.12);color:#f87171}
+/* canvas wrapper */
+#sim-canvas-wrap{
+  position:relative;flex:1;background:#0a0a10;
+  display:flex;align-items:stretch;
+}
+#sim-canvas{display:block;width:100%;cursor:none}
+/* HUD */
+#sim-hud{position:absolute;inset:0;pointer-events:none;padding:0.8rem;display:flex;flex-direction:column;justify-content:space-between}
+.hud-top{display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem}
+.hud-bot{display:flex;justify-content:space-between;align-items:flex-end;gap:0.5rem}
+.hud-box{background:rgba(10,10,16,0.82);border:1px solid rgba(240,238,234,0.1);border-radius:3px;padding:6px 12px;backdrop-filter:blur(4px)}
+.hud-speed-num{font-family:var(--font-m);font-weight:700;font-size:2rem;color:#f0eeea;line-height:1}
+.hud-speed-unit{font-family:var(--font-m);font-size:0.6rem;color:rgba(240,238,234,0.35);letter-spacing:0.1em}
+.hud-speed-bar{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:4px;overflow:hidden;width:70px}
+.hud-speed-fill{height:100%;border-radius:2px;transition:width .08s,background .15s;background:#22c55e}
+.hud-sign-popup{
+  background:rgba(10,10,16,0.92);border:2px solid #f5c842;
+  border-radius:4px;padding:10px 14px;max-width:200px;
+  animation:popIn .25s cubic-bezier(0.34,1.56,0.64,1);display:none;
+}
+@keyframes popIn{from{transform:scale(0.7) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.hud-alert{
+  background:rgba(239,68,68,0.9);border:1px solid #ef4444;
+  border-radius:3px;padding:6px 12px;
+  font-size:0.75rem;color:white;display:none;max-width:220px;text-align:center;
+  animation:shake .3s ease;
+}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}60%{transform:translateX(5px)}}
+.hud-minimap{
+  width:90px;height:70px;background:rgba(10,10,16,0.85);
+  border:1px solid rgba(240,238,234,0.15);border-radius:3px;overflow:hidden;position:relative;
+}
+.hud-gear{font-family:var(--font-m);font-size:1rem;font-weight:700;color:#f5c842}
+/* bottom bar */
+.sim-botbar{
+  background:#111118;border-top:1px solid #2a2a38;
+  padding:0.6rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-wrap:wrap;
+}
+.sim-btn{
+  background:#17171f;border:1px solid #2a2a38;color:rgba(240,238,234,0.6);
+  padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:3px;
+  transition:all .15s;font-family:var(--font-h);
+}
+.sim-btn:hover{background:#f5c842;color:#0a0a10;border-color:#f5c842}
+.sim-keys{font-family:var(--font-m);font-size:0.65rem;color:rgba(240,238,234,0.25);display:flex;gap:0.8rem;flex-wrap:wrap}
+.sim-log-bar{
+  background:#0d0d14;border-top:1px solid #1e1e28;
+  padding:4px 1.2rem;font-family:var(--font-m);font-size:0.65rem;
+  color:#6b6880;min-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* mobile controls */
+.mob-ctrl{display:none;flex-direction:column;align-items:center;gap:4px;padding:0.5rem 0}
+.mob-row{display:flex;gap:6px;justify-content:center}
+.mob-btn{
+  width:48px;height:48px;border-radius:10px;
+  background:#17171f;border:1.5px solid #2a2a38;
+  color:#f0eeea;font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-user-select:none;user-select:none;
+  transition:background .1s;
+}
+.mob-btn:active,.mob-btn.pressed{background:#f5c842;color:#0a0a10;border-color:#f5c842}
+/* sim result overlay */
+#sim-result-overlay{
+  position:absolute;inset:0;background:rgba(10,10,16,0.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2rem;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#sim-result-overlay.show{display:flex}
+.sro-emoji{font-size:4rem;margin-bottom:0.8rem}
+.sro-title{font-family:var(--font-m);font-weight:700;font-size:1.8rem;color:#f0eeea;margin-bottom:0.4rem}
+.sro-sub{color:#6b6880;margin-bottom:1.5rem;font-size:0.88rem}
+.sro-stats{display:flex;gap:1rem;justify-content:center;margin-bottom:2rem;flex-wrap:wrap}
+.sro-stat{background:#17171f;border:1px solid #2a2a38;padding:0.8rem 1.2rem;border-radius:3px;min-width:80px}
+.sro-stat-n{font-family:var(--font-m);font-weight:700;font-size:1.6rem;line-height:1}
+.sro-stat-l{font-size:0.65rem;color:#6b6880;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+.sro-btns{display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap}
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hud-top,.hud-bot{flex-wrap:wrap;gap:4px}
+  .hud-speed-num{font-size:1.5rem}
+  .sim-botbar .sim-keys{display:none}
+}
+@media(max-width:600px){
+  .q-images.two-img{grid-template-columns:1fr}
+  .q-img{max-height:200px}
+  .menu-modes{grid-template-columns:1fr}
+  .result-grid{grid-template-columns:repeat(3,1fr)}
+  .mob-ctrl{display:flex!important}
+  .sim-keys{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ MENU ══════════ -->
+<div id="menu-screen">
+  <div class="logo-mark">SMART<span>DRIVER</span></div>
+  <div class="logo-sub">Замын хөдөлгөөний дүрмийн тест · Mongolia</div>
+  <div class="menu-modes">
+    <div class="mode-card" style="--hover-c:#ef4444;--hover-bg:rgba(239,68,68,0.04)" onclick="showHot20()">
+      <span class="mc-badge badge-hot">🔥 ТҮГЭЭМЭЛ</span>
+      <div class="mc-icon">🎯</div>
+      <div class="mc-title">Түгээмэл 20 Асуулт</div>
+      <div class="mc-desc">Шалгалтанд хамгийн байнга гардаг 20 асуулт. Эхлэхийн өмнө заавал үзэх!</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#22c55e;--hover-bg:rgba(34,197,94,0.04)" onclick="startRandomQuiz()">
+      <span class="mc-badge badge-new">PRACTICE</span>
+      <div class="mc-icon">🎲</div>
+      <div class="mc-title">Санамсаргүй Тест</div>
+      <div class="mc-desc">40 картаас санамсаргүй 20 асуулт. Тайлбартай, зурагтай. Дадлага хийх.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#3b82f6;--hover-bg:rgba(59,130,246,0.04)" onclick="showCardSelect()">
+      <span class="mc-badge badge-all">КАРТ 1–40</span>
+      <div class="mc-icon">📋</div>
+      <div class="mc-title">Картаар Сонгох</div>
+      <div class="mc-desc">40 карт бүрийг зурагтайгаар үзэх. Тус бүр 20 асуулт, зөв хариулт бүртэй.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#f59e0b;--hover-bg:rgba(245,158,11,0.04)" onclick="startExamMode()">
+      <span class="mc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">EXAM</span>
+      <div class="mc-icon">⏱️</div>
+      <div class="mc-title">Шалгалтын Горим</div>
+      <div class="mc-desc">Бодит шалгалттай ижил. 20 асуулт, 20 минут. Тайлбар харагдахгүй.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#a855f7;--hover-bg:rgba(168,85,247,0.04)" onclick="showSimulator()">
+      <span class="mc-badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3)">🎮 ШИНЭ</span>
+      <div class="mc-icon">🚗</div>
+      <div class="mc-title">Виртуал Жолоодлого</div>
+      <div class="mc-desc">Улаанбаатарын замд жолоо барих дадлага. 6 сценари. WASD товч ашиглана.</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-n">40</div><div class="stat-l">Карт</div></div>
+    <div class="stat-item"><div class="stat-n">800</div><div class="stat-l">Асуулт</div></div>
+    <div class="stat-item"><div class="stat-n">6</div><div class="stat-l">Сценари</div></div>
+    <div class="stat-item"><div class="stat-n" id="menu-done">0</div><div class="stat-l">Тест өгсөн</div></div>
+  </div>
+  <div style="margin-top:1.5rem;font-family:var(--font-m);font-size:0.65rem;color:rgba(240,238,234,0.2);letter-spacing:0.1em">
+    Тест: А Б В Г товч · Дараагийн: Space/Enter · Симулятор: WASD / ← ↑ ↓ →
+  </div>
+</div>
+
+<!-- ══════════ CARD SELECT ══════════ -->
+<div id="card-select-screen">
+  <button class="back-btn" onclick="showMenu()">← Буцах</button>
+  <div class="cs-title">Карт сонгох</div>
+  <div class="cs-sub">Карт бүр 2 зурагтай, 20 асуултай. Зурагнаас харж хариулна уу.</div>
+  <div class="card-grid" id="card-grid"></div>
+</div>
+
+<!-- ══════════ HOT 20 ══════════ -->
+<div id="hot20-screen">
+  <button class="back-btn" onclick="showMenu()">← Буцах</button>
+  <div class="cs-title">🔥 Шалгалтанд Хамгийн Байнга Гардаг 20 Асуулт</div>
+  <div class="cs-sub" style="margin-bottom:1.5rem">Олон картад давтагддаг, оноо авах магадлал өндөр асуултууд. Дараа нь тест өгөх товчийг дарна уу.</div>
+  <div id="hot20-list"></div>
+  <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap">
+    <button class="btn-retry" onclick="startHot20Quiz()">🎯 Эдгээрийг тест өгөх</button>
+    <button class="btn-menu" onclick="showMenu()">Буцах</button>
+  </div>
+</div>
+
+<!-- ══════════ QUIZ ══════════ -->
+<div id="quiz-screen">
+  <div class="quiz-header">
+    <button class="quiz-back" onclick="confirmExit()">✕</button>
+    <div class="quiz-progress-track"><div class="quiz-progress-fill" id="q-prog-fill"></div></div>
+    <div class="quiz-counter" id="q-counter">1/20</div>
+    <div class="quiz-timer" id="q-timer" style="display:none">20:00</div>
+  </div>
+  <div class="dot-track" id="dot-track"></div>
+  <div class="q-wrap" id="q-wrap"></div>
+</div>
+
+<!-- ══════════ RESULT ══════════ -->
+<div id="result-screen">
+  <div class="result-ring" id="result-ring">
+    <div class="result-big" id="result-big">0</div>
+    <div class="result-of" id="result-of">/20</div>
+  </div>
+  <div class="result-title" id="result-title">Дүн</div>
+  <div class="result-sub" id="result-sub">Та шалгалтыг өглөө</div>
+  <div class="result-grid">
+    <div class="rg-item"><div class="rg-n" id="rg-ok" style="color:var(--green)">0</div><div class="rg-l">Зөв</div></div>
+    <div class="rg-item"><div class="rg-n" id="rg-fail" style="color:var(--red)">0</div><div class="rg-l">Буруу</div></div>
+    <div class="rg-item"><div class="rg-n" id="rg-time">—</div><div class="rg-l">Хугацаа</div></div>
+  </div>
+  <div class="wrong-list" id="wrong-list"></div>
+  <div class="result-actions" id="result-actions">
+    <button class="btn-retry" id="btn-retry" onclick="retryQuiz()">🔄 Дахин өгөх</button>
+    <button class="btn-menu" onclick="showMenu()">← Цэс рүү</button>
+  </div>
+</div>
+
+<!-- ══════════ SIMULATOR SCENARIO SELECT ══════════ -->
+<div id="sim-scenario-screen" style="display:none;background:#0a0a10;min-height:100vh;padding:2rem;flex-direction:column">
+  <button class="back-btn" onclick="showMenu()" style="color:#6b6880">← Буцах</button>
+  <div style="font-family:var(--font-m);font-size:0.7rem;color:#f5c842;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem">// ВИРТУАЛ ЖОЛООДЛОГО</div>
+  <div style="font-weight:900;font-size:1.8rem;color:#f0eeea;margin-bottom:0.3rem">Сценари сонгох</div>
+  <div style="color:#6b6880;font-size:0.85rem;margin-bottom:0.3rem">WASD эсвэл ← ↑ ↓ → товч ашиглана. Мобайлд доорх товчлуурыг ашиглана.</div>
+  <div style="font-family:var(--font-m);font-size:0.68rem;color:rgba(245,200,66,0.6);margin-bottom:1.5rem">⌨ W/↑ газ · S/↓ гальмуур · A/↑ зүүн · D/→ баруун · Space зогсоо/үргэлжлүүл</div>
+  <div class="sc-grid" id="sc-grid"></div>
+</div>
+
+<!-- ══════════ SIMULATOR PLAY ══════════ -->
+<div id="sim-screen" style="display:none;background:#0a0a10;min-height:100vh;flex-direction:column">
+  <div class="sim-topbar">
+    <button class="sim-back" onclick="exitSim()">✕</button>
+    <div class="sim-sep">|</div>
+    <div class="sim-title" id="sim-sc-title">—</div>
+    <div class="sim-sep">|</div>
+    <div class="sim-task-label" id="sim-task-txt">—</div>
+    <div class="sim-score-hud">Оноо: <span id="sim-score-disp">100</span></div>
+  </div>
+  <div class="sim-canvas-wrap" style="position:relative;flex:1;background:#0a0a10;display:flex;flex-direction:column">
+    <canvas id="sim-canvas" style="display:block;width:100%;max-height:500px"></canvas>
+    <!-- HUD -->
+    <div id="sim-hud" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;padding:0.8rem;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="hud-minimap" id="sim-minimap"></div>
+        <div id="sim-sign-popup" class="hud-sign-popup" style="display:none">
+          <div style="font-size:1.6rem;text-align:center" id="popup-icon">⚠️</div>
+          <div style="font-family:var(--font-m);font-size:0.68rem;color:#f5c842;text-align:center;margin-top:2px" id="popup-name">—</div>
+          <div style="font-size:0.72rem;color:rgba(240,238,234,0.7);margin-top:4px;text-align:center" id="popup-rule">—</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div class="hud-box">
+          <div class="hud-speed-num" id="hud-speed">0</div>
+          <div class="hud-speed-unit">КМ/ЦАГ</div>
+          <div class="hud-speed-bar"><div class="hud-speed-fill" id="hud-speed-fill"></div></div>
+        </div>
+        <div id="hud-alert" class="hud-alert"></div>
+        <div class="hud-box" style="text-align:center">
+          <div style="font-family:var(--font-m);font-size:0.6rem;color:rgba(240,238,234,0.3);letter-spacing:0.1em">ДАМЖ</div>
+          <div class="hud-gear" id="hud-gear">N</div>
+        </div>
+      </div>
+    </div>
+    <!-- Result overlay -->
+    <div id="sim-result-overlay">
+      <div class="sro-emoji" id="sro-emoji">🏆</div>
+      <div class="sro-title" id="sro-title">Маш сайн!</div>
+      <div class="sro-sub" id="sro-sub">Дасгалыг амжилттай дуусгалаа</div>
+      <div class="sro-stats">
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-score" style="color:#22c55e">100</div><div class="sro-stat-l">Оноо</div></div>
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-errors" style="color:#ef4444">0</div><div class="sro-stat-l">Алдаа</div></div>
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-time" style="color:#f5c842">0с</div><div class="sro-stat-l">Цаг</div></div>
+      </div>
+      <div class="sro-btns">
+        <button class="btn-retry" onclick="simRestart()">🔄 Дахин</button>
+        <button class="btn-menu" onclick="showSimulator()">← Сценари</button>
+        <button class="btn-menu" onclick="showMenu()">Цэс</button>
+      </div>
+    </div>
+  </div>
+  <!-- Mobile controls -->
+  <div class="mob-ctrl" id="mob-ctrl" style="background:#111118;border-top:1px solid #2a2a38;padding:0.6rem">
+    <div class="mob-row">
+      <div style="width:48px"></div>
+      <button class="mob-btn" id="mb-up" ontouchstart="simKeys['ArrowUp']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowUp']=false;this.classList.remove('pressed')">▲</button>
+      <div style="width:48px"></div>
+    </div>
+    <div class="mob-row">
+      <button class="mob-btn" id="mb-left" ontouchstart="simKeys['ArrowLeft']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowLeft']=false;this.classList.remove('pressed')">◀</button>
+      <button class="mob-btn" id="mb-down" ontouchstart="simKeys['ArrowDown']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowDown']=false;this.classList.remove('pressed')">▼</button>
+      <button class="mob-btn" id="mb-right" ontouchstart="simKeys['ArrowRight']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowRight']=false;this.classList.remove('pressed')">▶</button>
+    </div>
+  </div>
+  <div class="sim-botbar">
+    <div style="display:flex;gap:0.5rem">
+      <button class="sim-btn" id="sim-pause-btn" onclick="toggleSimPause()">⏸ Зогсоох</button>
+      <button class="sim-btn" onclick="simRestart()">🔄 Дахин</button>
+      <button class="sim-btn" onclick="exitSim()">✕ Гарах</button>
+    </div>
+    <div class="sim-keys">
+      <span>W/↑ Газ</span><span>S/↓ Гальмуур</span><span>A/← Зүүн</span><span>D/→ Баруун</span><span>Space Зогс</span>
+    </div>
+  </div>
+  <div class="sim-log-bar" id="sim-log">Симулятор бэлэн...</div>
+</div>
+
+<!-- IMAGE ZOOM -->
+<div id="img-zoom" onclick="closeZoom()"><img id="zoom-img" src="" alt=""></div>
+<div id="focus-flash"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// 📦 DATA — All 40 cards answer keys from bilguuntulga.com
+// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 📦 БОДИТ АСУУЛТ — bilguuntulga.com-оос авсан
+// Карт бүр 20 асуулттай, А/Б/В/Г хариулттай
+// ═══════════════════════════════════════════════════
+const CARD_DATA = {
+  1: {
+    ans:[1,2,1,1,3,2,3,2,3,4,1,2,3,2,3,1,2,1,2,1],
+    q:[
+      {t:'Гэрэл дохионы бүх гэрэл унтарсан тохиолдолд жолооч яаж явах вэ?',o:['Зогсоно','Болгоомжтойгоор нэвтэрнэ','Хурдаа нэмнэ','Буцна']},
+      {t:'Явган хүний гарцад явган хүн байхгүй бол жолооч юу хийх вэ?',o:['Зогсоно','Болгоомжтойгоор нэвтэрч болно','Дуут дохио өгнө','Хурдаа нэмнэ']},
+      {t:'Хот доторх замын хурдны дээд хязгаар хэд вэ?',o:['40 км/ц','50 км/ц','60 км/ц','80 км/ц']},
+      {t:'Замын тэмдэг болон гэрэл дохио зөрчилдвөл аль нь хүчинтэй вэ?',o:['Гэрэл дохио','Замын тэмдэг','Цагдаагийн дохио','Хоёулаа тэнцүү']},
+      {t:'Явган хүний гарцын өмнө жолооч юу хийх ёстой вэ?',o:['Дуут дохио өгнө','Хурдаа нэмнэ','Зогсоно эсвэл замыг тавина','Ямар ч зүйл хийхгүй']},
+      {t:'Ногоон гэрэл асахад жолооч юу хийх вэ?',o:['Шууд хурдтай явна','Замыг шалгаад болгоомжтойгоор явна','Зогсоно','Дуут дохио өгнө']},
+      {t:'Баруун тийш эргэхийн өмнө дохио хэзээ өгөх вэ?',o:['Эргэхийн яг өмнө','30 метрийн өмнөөс','100-50 метрийн өмнөөс','Дохио өгхгүй']},
+      {t:'Улаан гэрэлтэй уулзварт зогсох үед хаана зогсох вэ?',o:['Уулзварын дунд','Зурваасын хойно','Явган хүний гарц дээр','Хаана ч болно']},
+      {t:'Хоёр чиглэлт замд явахдаа аль талаар явах вэ?',o:['Зүүн тал','Дунд','Баруун тал','Аль ч тал']},
+      {t:'Аюулгүйн бүс хэн зүүх ёстой вэ?',o:['Зөвхөн жолооч','Урд суудлынхан','Бүх суугч','Хурдан явахад л зүүнэ']},
+      {t:'Замын хөдөлгөөнд хэн оролцдог вэ?',o:['Жолооч, явган хүн, хөлөг онгоцны жолооч','Зөвхөн жолооч','Зөвхөн явган хүн','Хөлөг онгоцны жолооч']},
+      {t:'Тэмдэглэгдсэн явган хүний гарцад явган хүн гарч байвал жолооч юу хийх вэ?',o:['Хурдаа бааруулна','Замыг тавина','Дуут дохио өгнө','Гэрлийн дохиог асаана']},
+      {t:'Замын хөдөлгөөний дүрмийн үндсэн зорилго юу вэ?',o:['Хурдыг нэмэгдүүлэх','Аюулгүй байдлыг хангах','Түгжрэлийг бууруулах','Замын хэмжээг нэмэгдүүлэх']},
+      {t:'Зам засварын үед хатуу малгайтай ажилчид байвал жолооч юу хийх вэ?',o:['Хурдаа нэмнэ','Замыг тавина','Хурдаа бааруулна','Нэгэн зурваасаар явна']},
+      {t:'Хотоос гадна замд хурдны дээд хязгаар хэд вэ?',o:['60 км/ц','70 км/ц','80 км/ц','100 км/ц']},
+      {t:'Нэг чиглэлийн замд буцаж явах оролдлого ямар вэ?',o:['Хориотой','Зөвшөөрөгдсөн','Шөнө болно','Дохиотой бол болно']},
+      {t:'Жолооч замыг сольхдоо юу хийх вэ?',o:['Шууд солино','Дохио өгч замаа солино','Хурдаа нэмэнэ','Зогсоно']},
+      {t:'Тээврийн хэрэгслийн жолооч согтуу үедээ жолоодож болох уу?',o:['Болно','Болохгүй','Богино зайнд болно','Маш бага уусан бол болно']},
+      {t:'Тэмдэглэгдсэн явган хүний гарцад жолооч яаж зогсох вэ?',o:['Гарцын дунд','Стоп шугамаас хойно','Явган хүний гарц дээр','Ойрхон зогсоно']},
+      {t:'Хурдны тэмдэг байхгүй үед хотод хэдэн км/ц явах вэ?',o:['40 км/ц','50 км/ц','60 км/ц','80 км/ц']},
+    ]
+  },
+  2: {
+    ans:[1,1,1,3,3,3,2,3,4,2,1,4,3,2,1,1,1,3,1,4],
+    q:[
+      {t:'Цэнхэр гэрэл, дуут дохиотой яаралтай тусламжийн машин ирэхэд юу хийх вэ?',o:['Нэн даруй замаас зайлна','Хурдаа нэмнэ','Дохио өгнө','Ямар ч зүйл хийхгүй']},
+      {t:'STOP тэмдгийн дэргэд жолооч юу хийх ёстой вэ?',o:['Заавал бүрэн зогсоно','Хурдаа бааруулж явна','Дохио өгнө','Нэвтэрч болно']},
+      {t:'Дугуй эргэлтэнд аль машин давуу эрхтэй вэ?',o:['Дугуй эргэлтэнд байгаа машин','Орж ирж буй машин','Баруун талаас ирэх машин','Зүүн талаас ирэх машин']},
+      {t:'Тааруу харагдах нөхцөлд гэрлийн системийг хэрхэн ашиглах вэ?',o:['Урд гэрлийг унтраана','Ар гэрлийг асааж явна','Дохионы гэрлийг ашиглана','Бүх гэрлийг асааж болгоомжтойгоор явна']},
+      {t:'Машины урд талд эсвэл ард нь явган хүн гарлаа. Жолооч юу хийх вэ?',o:['Хурдаа нэмнэ','Дохио өгнө','Замыг тавина','Аяндаа явна']},
+      {t:'Уулзварт эргэхийн өмнө жолооч юу хийх вэ?',o:['Гэнэтхэн эргэнэ','Хурдаа нэмнэ','Дохио өгч замаа бэлдэнэ','Зогсоно']},
+      {t:'Хотоос гадна замд шөнийн цагт явахдаа ямар гэрэл ашиглах вэ?',o:['Урд гэрлийг унтрааж явна','Шингэрүүлсэн (доод) гэрэл ашиглана','Дээр (урт) гэрэл ашиглана','Бүх гэрлийг унтрааж явна']},
+      {t:'Нийтийн тээврийн буудлын ойролцоо явахдаа жолооч яаж явах вэ?',o:['Хурдаа нэмнэ','Дуут дохио өгнө','Хурдаа бааруулж болгоомжтойгоор явна','Нэгэн зурваасаар явна']},
+      {t:'Жолооч ямар тохиолдолд шөнийн гэрэл асаах ёстой вэ?',o:['Зөвхөн хот дотор','Зөвхөн хотоос гадна','Зөвхөн бороотой үед','Харанхуй болмогц заавал']},
+      {t:'Шар гэрэл асахад жолооч яаж явах вэ?',o:['Хурдаа нэмнэ','Боломжтой бол зогсоно','Шууд зогсоно','Хурдаа бааруулж хүлээнэ']},
+      {t:'Хурд хэтрүүлснийг хэрхэн тодорхойлох вэ?',o:['Тогтоосон хязгаараас хэтрэхэд','Бусдаас хурдан явахад','Гэрэл дохио зөрчихэд','Тэмдэг зөрчихөд']},
+      {t:'Явган хүний гарцаас 5 метр дотор зогсох нь ямар вэ?',o:['Зөвшөөрөгдсөн','Зөвхөн богино хугацааны зогсолт болно','Хориотой','Оройн цагт болно']},
+      {t:'Автомашины зогсоолд буцааж орохдоо жолооч юу хийх вэ?',o:['Шууд ороно','Дохио өгч аажуухан ороно','Хурдан ороно','Хийн дохио өгнө']},
+      {t:'Нэгэн зурваасаар явахдаа машин хоорондын зай хэд байх вэ?',o:['3 метр','5 метр','Хурд болон замаас хамаарсан аюулгүй зай','1 метр']},
+      {t:'Замын ажилчдыг хамгаалах зорилгоор тавьсан тэмдгийг жолооч хэрхэн мөрдөх вэ?',o:['Заавал мөрдөнө','Мөрдөх шаардлагагүй','Зөвхөн шөнө мөрдөнө','Хурдан явбал мөрдөхгүй болно']},
+      {t:'Замд гэнэтийн саад тохиолдвол жолооч юу хийх вэ?',o:['Хурдан гальмуурдана','Зам солино','Хурдаа бааруулж аюулгүй зогсоно','Дохио өгнө']},
+      {t:'Зурвасаасаа хэтэрч давах нь ямар нөхцөлд зөвшөөрөгддөг вэ?',o:['Замын хуваарилагч шугамыг зөрчсөнгүй бол','Хурдан явах шаардлагатай бол','Зам хоосон бол','Ямар ч тохиолдолд болохгүй']},
+      {t:'Машины зогсоолд орохдоо жолооч юу хийх вэ?',o:['Шууд ороно','Дохио өгч замыг шалгана','Хурдан ороно','Дуут дохио өгнө']},
+      {t:'Хотод явган хүнийг мөргөсөн жолоочид ямар хариуцлага ногдох вэ?',o:['Иргэний болон эрүүгийн хариуцлага','Зөвхөн торгуулийн хариуцлага','Хариуцлага байхгүй','Зөвхөн анхааруулга']},
+      {t:'Жолооч ядарсан үедээ юу хийх вэ?',o:['Удаан явна','Кофе ууж явна','Зогсоод амарна','Дуут дохио өгнө']},
+    ]
+  },
+  3: {
+    ans:[2,4,3,1,3,1,3,3,1,1,1,1,2,3,2,1,1,3,1,3],
+    q:[
+      {t:'Жолооч дохиогоо өгсний дараа замаа сольж болох уу?',o:['Шууд солих болно','Дохио өгч замыг шалгасны дараа солино','Дохио өгөхгүйгөөр солино','Зөвхөн хурдан явбал болно']},
+      {t:'Тогтоосон газраас бусад газарт машин зогсоох нь ямар вэ?',o:['Зөвшөөрөгдсөн','Зөвхөн шөнө зөвшөөрөгдсөн','Хориотой тохиолдол байдаг','Замын хажуу болгонд зогсоож болно']},
+      {t:'Хот доторх тэмдэггүй уулзварт аль машин давуу эрхтэй вэ?',o:['Зүүнээс ирэх','Урдаас ирэх','Баруунаас ирэх','Хойноос ирэх']},
+      {t:'Яаралтай тусламжийн машин хэдэн км/ц-аас хурдан явж болох уу?',o:['Дүрмийн хязгаараас гадуур хурдтай явж болно','80 км/ц','60 км/ц','100 км/ц']},
+      {t:'Нийтийн авто замд хурдны дээд хязгаар хэд вэ?',o:['80 км/ц','90 км/ц','100 км/ц','120 км/ц']},
+      {t:'Зорчигчийг буулгах, суулгах үед жолооч юу хийх вэ?',o:['Аюулгүй газарт зогсооно','Замын дунд зогсооно','Хурдаа бааруулна','Дуут дохио өгнө']},
+      {t:'Жолооч давуу эрхийн тэмдгийн дэргэд яаж явах вэ?',o:['Зогсоно','Хурдаа нэмнэ','Давуу эрхгүй машинд замыг тавина','Ямар ч зүйл хийхгүй']},
+      {t:'Гэрэл дохиогүй ижил зэрэглэлийн уулзварт аль машин давуу эрхтэй вэ?',o:['Зүүнээс ирэх','Урдаас ирэх','Баруунаас ирэх','Хойноос ирэх']},
+      {t:'Зурвас солихын өмнө жолооч юу хийх вэ?',o:['Дохио өгч замыг шалгана','Шууд солино','Гальмуурдана','Дуут дохио өгнө']},
+      {t:'Буцааж явахдао жолооч яаж хийх вэ?',o:['Замыг шалгаж болгоомжтойгоор явна','Шууд явна','Хурдан явна','Дуут дохио өгнө']},
+      {t:'Тусгай тэмдэгтэй хүүхдийн зорчдог газарт хурдны дээд хязгаар хэд вэ?',o:['40 км/ц','30 км/ц','50 км/ц','60 км/ц']},
+      {t:'Машины хойно явах жолооч ямар зайтай явах вэ?',o:['Хурд болон нөхцлийг харгалзсан аюулгүй зай','1 метр','5 метр','10 метр']},
+      {t:'Уулзварт баруун тийш эргэхдээ жолооч аль зурваасаар явах вэ?',o:['Зүүн зурваас','Дунд зурваас','Баруун зурваас','Аль зурваас ч болно']},
+      {t:'Жолооч машины тоормосын систем доройтсон нь мэдэгдвэл юу хийх вэ?',o:['Удаан явна','Хурдан очоод зогсоно','Нэн даруй замаас гарч аюулгүй газарт зогсоно','Бусад машинд дохио өгнө']},
+      {t:'Замын хажуугаар явгалж буй унаган мориг машин давах нь ямар вэ?',o:['Хориотой','Аажуухан давах болно','Дохио өгч хурдтай давна','Хурдаа бааруулж аюулгүйгээр давна']},
+      {t:'Жолооч зорчигчийн аюулгүй байдалд хариуцлагатай юу?',o:['Тийм, жолооч хариуцлагатай','Зорчигч өөрөө хариуцана','Хэн ч хариуцахгүй','Тэгш хариуцна']},
+      {t:'Зогсоолд орохдоо жолооч хаана зогсох вэ?',o:['Тэмдэглэгдсэн газарт','Хаана ч болно','Хамгийн ойр газарт','Гарцын ойролцоо']},
+      {t:'Хурдны хязгаарыг тогтоох эрх хэнд байдаг вэ?',o:['Жолоочид','Замын хөдөлгөөн зохицуулагчид','Эрх бүхий байгууллагад','Хотын захиргаанд']},
+      {t:'Манан, цас, бороотой үед жолооч яаж явах вэ?',o:['Дохионы гэрэл асааж болгоомжтойгоор явна','Хурдаа нэмнэ','Ямар ч зүйл хийхгүй','Зогсоно']},
+      {t:'Хотоос гадна явахдаа машины урд гэрлийг хэзээ асаах вэ?',o:['Зөвхөн шөнө','Харагдах байдал муу бол','Харанхуй болмогц','Хаана ч асаадаг']},
+    ]
+  },
+
+  4: {
+    ans:[2,3,1,2,1,3,2,1,3,2,3,1,2,3,1,2,1,3,2,1],
+    q:[
+      {t:'Авто осолд орсон жолооч юуны түрүүнд юу хийх ёстой вэ?',o:['Машинаасаа гарч зугтана','Машинаа зогсоож яаралтай тусламж дуудна','Хурдан явна','Нөгөө машины мэдээллийг авна']},
+      {t:'Архи уусан жолооч явахыг хэрхэн тодорхойлох вэ?',o:['Эрүүл мэндийн үзлэгээр','Цусан дахь алкоголийн хэмжэмжлэлээр','Нүдний шалгалтаар','Амьсгалын шалгалтаар']},
+      {t:'Монголд согтуу жолоодох цусан дахь алкоголийн дээд хязгаар хэд вэ?',o:['0.00 промилл (тэг)','0.03 промилл','0.05 промилл','0.08 промилл']},
+      {t:'Жолооны үнэмлэхний "B" ангилал ямар тээврийн хэрэгслийг хамрах вэ?',o:['Мотоцикл','3.5 тонн хүртэлх суудлын болон ачааны машин','8 тоннаас дээш ачааны машин','Автобус']},
+      {t:'Авто ослын газарт жолооч юу хийх ёсгүй вэ?',o:['Яаралтай тусламж дуудах','Ослын газрыг орхих (гэмт хэрэгтэн биш бол)','Гэмтсэн хүнд тусламж үзүүлэх','Гарын үсэг авах']},
+      {t:'Тээврийн хэрэгсэл гэнэт зогсох шаардлага гарвал жолооч юу хийх вэ?',o:['Ямар ч зүйл хийхгүй','Дохионы гэрлийг асааж замын хажуу руу зогсооно','Хурдан явна','Шууд тормоздоно']},
+      {t:'Замын тэмдгийн хэддэх ангилал нь "Анхааруулгын" тэмдэг вэ?',o:['1-р ангилал','2-р ангилал','3-р ангилал','4-р ангилал']},
+      {t:'Монголын замын хөдөлгөөний аль тал нь зөв вэ?',o:['Зүүн гар тал','Баруун гар тал','Дунд','Ямар ч тал']},
+      {t:'Замын хатуу дунд шугамыг (суурин шугам) давах нь ямар вэ?',o:['Зөвшөөрөгдсөн','Зарим нөхцөлд болно','Хатуу хориотой','Шөнө болно']},
+      {t:'Буцааж явах үед жолооч хэр зайнд харах ёстой вэ?',o:['5 метр','10 метр','Аюулгүйгээр явахад хангалттай харааны зай','30 метр']},
+      {t:'Гэрэл дохиогүй газарт замыг кросс хийж гарах нь ямар вэ?',o:['Хориотой','Зөвшөөрөгдсөн','Зөвхөн шөнө','Аажуухан бол болно']},
+      {t:'Мотоцикл жолоодохдоо дуулга зүүх нь ямар вэ?',o:['Зөвшөөрөлтэй','Заавал зүүх шаардлагатай','Зөвхөн хурдан явахад','Тусгай зөвшөөрлөөр']},
+      {t:'Зурваасаа солихдоо хэдийн өмнө дохио өгөх вэ?',o:['Шууд солиход','30 метрийн өмнө','Хурд болон нөхцлөөс хамаарч 50-100 метрийн өмнө','1 метрийн өмнө']},
+      {t:'Зам дагуу явж буй мотоциклийн хажуугаар нэвтрэхдээ ямар зай барих вэ?',o:['1 метр','Аюулгүй зай барина','0.5 метр','5 метр']},
+      {t:'Явган хүний гарцаас хэр зайд зогсоолт хориотой вэ?',o:['5 метр','10 метр','15 метр','20 метр']},
+      {t:'Тусгай зөвшөөрөлтэй хэт өргөн тээврийн хэрэгсэл замыг хэрхэн ашиглах вэ?',o:['Дурын цагт явна','Зөвхөн шөнө явна','Тусгай зөвшөөрөл, дагалдах машинтайгаар явна','Хоёр зурваас эзэлж явна']},
+      {t:'4 замт уулзварт аль замаас ирсэн машин давуу эрхгүй вэ?',o:['Баруунаас ирсэн','Зүүнээс ирсэн','Зүүн тийш эргэх машин','Урдаас ирсэн']},
+      {t:'Жолооч ядарсан үедээ юу хийх вэ?',o:['Кофе уух','Цонхоо онгойлгох','Зогсоод амарна','Дуу хөгжим сонсох']},
+      {t:'Нарны харуулаас болж гэнэт харагдахгүй болвол жолооч юу хийх вэ?',o:['Хурдаа нэмнэ','Хурдаа бааруулж болгоомжтойгоор явна','Зогсоно','Гэрлийн дохиог асааж явна']},
+      {t:'Зам дээр амьтан (мал) гарч ирвэл жолооч юу хийх вэ?',o:['Дуут дохио өгч давна','Хурдаа нэмнэ','Хурдаа бааруулж зогсоо эсвэл амьтнаас зайлна','Хажуугийн замаар явна']},
+    ]
+  },
+  5: {
+    ans:[1,2,3,1,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2],
+    q:[
+      {t:'Хаалт (шлагбаум) хаагдаж байгаа үед жолооч юу хийх вэ?',o:['Зогсоно','Хурдан давна','Дохио өгнө','Буцна']},
+      {t:'Хаалт нээгдэж байгаа үед явж болох уу?',o:['Тийм, шууд явна','Зөвхөн хаалт бүрэн нээгдсэний дараа','Хаалт хагас нээгдсэн бол болно','Яаралтай тохиолдолд болно']},
+      {t:'Хаалтын ойролцоо дуут дохио өгч болох уу?',o:['Тийм, болно','Зөвхөн яаралтай тохиолдолд','Хориотой','Зөвхөн шөнө болно']},
+      {t:'Зам засварын бүсэд жолооч хурдаа хэрхэн тохируулах вэ?',o:['Тэмдэгт заасан хязгаарт тохируулна','Хурдаа нэмнэ','Хурдны хязгаар байхгүй','Замын ажилчны зааврыг дагана']},
+      {t:'Мөсөн дээр гальмуурдахдаа жолооч яаж хийх вэ?',o:['Хурдан гальмуурдана','Аажуухан, тасалдлаар гальмуурдана','Жийргэвчийг ашиглана','Хойд дугуйгаар гальмуурдана']},
+      {t:'Зун халуун үед хаттай замд дугуйн даралтыг яаж тохируулах вэ?',o:['Тогтоосон хэмжээнд байлгана','Бага зэрэг бууруулна','Нэмэгдүүлнэ','Хамаагүй']},
+      {t:'Буцааж явахдаа замын аль тал руу харах вэ?',o:['Зөвхөн баруун тийш','Зөвхөн зүүн тийш','Хойш болон хоёр талдаа','Зөвхөн хойш']},
+      {t:'Дохиогоо өгсөний дараа замыг сольж болох уу?',o:['Тийм, шууд солино','Замыг шалгасны дараа л солино','Хурдаа бааруулж шууд солино','Дохио өгөхгүйгөөр солино']},
+      {t:'Уулзвараас 5 метр дотор зогсоолт хийх нь ямар вэ?',o:['Хориотой','Зөвшөөрөгдсөн','Зөвхөн яаралтай тохиолдолд','Богино хугацаанд болно']},
+      {t:'Гэрлийн дохио эвдэрсэн уулзварт жолооч яаж явах вэ?',o:['Хурдан давна','Хурдаа нэмнэ','Гэрэл дохиогүй уулзварын дүрмийг баримтална','Машинаа зогсооно']},
+      {t:'Гарам (тунель)-д орохын өмнө жолооч юу хийх вэ?',o:['Хурдаа нэмнэ','Гэрлийг асааж хурдаа бааруулна','Дуут дохио өгнө','Яалт ч үгүй давна']},
+      {t:'Хурдны хязгаар 80 км/ц байхад жолооч 90 км/ц явах нь ямар вэ?',o:['Зөвшөөрөгдсөн','Хориотой, торгуулийн шалтгаан болно','Зам хоосон бол болно','Шөнийн цагт болно']},
+      {t:'Хоёр чиглэлт замд эсрэг талаас ирэх машинтай аюулгүй зай хэд байх вэ?',o:['0.5 метр','1 метр','Хурд болон замын байдлаас хамаарсан аюулгүй зай','5 метр']},
+      {t:'Галт тэрэгний гарамд зогсохдоо жолооч хаана зогсох вэ?',o:['Гарамын дотор','Гарамаас 5 метрт','Гарамын шугамаас хойно','Хаана ч болно']},
+      {t:'Тусгай тэмдэгтэй хөгжлийн бэрхшээлтэй иргэний зогсоолд жирийн машин зогсох нь ямар вэ?',o:['Зөвшөөрөгдсөн','Хориотой','Зөвхөн богино хугацаанд болно','Бусад зогсоол байхгүй бол болно']},
+      {t:'Замын хажуугийн мод, байгууламж гэрэл дохионыг харагдахгүй болговол жолооч юу хийх вэ?',o:['Хурдаа нэмнэ','Болгоомжтойгоор, хурдаа бааруулж явна','Зогсоно','Дуут дохио өгнө']},
+      {t:'Нийтийн автобус буудлаас гарах үед жолооч юу хийх вэ?',o:['Автобусыг давна','Автобусд замыг тавина','Дуут дохио өгнө','Хурдаа нэмнэ']},
+      {t:'Хот доторх нэг чиглэлийн замд хэд хэдэн зурваас байвал баруун тийш эргэхдээ аль зурваасаар явах вэ?',o:['Зүүн зурваас','Дунд зурваас','Хамгийн баруун зурваас','Аль зурваас ч болно']},
+      {t:'Тэмдэглэгдсэн зурваасаар явахдаа зурваасаа хэзээ сольж болох вэ?',o:['Хэзээ ч болно','Зөвхөн хатуу шугамыг зөрчихгүй, дохио өгч, замыг шалгасны дараа','Зогсоол дотор','Уулзварт']},
+      {t:'Жолооч согтуугаар явснаа хэрхэн нотлох вэ?',o:['Нотлох шаардлагагүй','Жолооч өөрөө хэлнэ','Цагдаагийн хэмжилтээр нотлогдоно','Гэрчийн мэдүүлгээр']},
+    ]
+  }
+};
+
+// ── STREAK + BADGE SYSTEM ──
+function getStreak() {
+  const h = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  if (!h.length) return {streak:0, best:0};
+  const dates = [...new Set(h.map(q => new Date(q.date).toDateString()))];
+  return {streak: dates.length, best: dates.length};
+}
+
+function getWeakTopics() {
+  const h = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  const cardScores = {};
+  h.forEach(q => {
+    if (!q.cardNum) return;
+    if (!cardScores[q.cardNum]) cardScores[q.cardNum] = {correct:0, total:0};
+    cardScores[q.cardNum].correct += (q.correct||0);
+    cardScores[q.cardNum].total += (q.total||20);
+  });
+  return Object.entries(cardScores)
+    .map(([c,s]) => ({card:parseInt(c), pct:Math.round(s.correct/s.total*100)}))
+    .filter(x=>x.pct<70).sort((a,b)=>a.pct-b.pct).slice(0,5);
+}
+
+// ── TRAFFIC AI ──
+function spawnTraffic(S) {
+  if (!S.traffic) S.traffic=[];
+  if (S.traffic.length>=5) return;
+  const hRoads=(S.roads||[]).filter(r=>r.w>r.h);
+  if(!hRoads.length) return;
+  const road=hRoads[Math.floor(Math.random()*hRoads.length)];
+  const dir=Math.random()>0.5?1:-1;
+  const cols=['#3b82f6','#22c55e','#a855f7','#f97316','#64748b','#0891b2'];
+  S.traffic.push({
+    x:dir>0?road.x-80:road.x+road.w+80,
+    y:road.y+road.h*(Math.random()>0.5?0.25:0.75),
+    angle:dir>0?0:Math.PI, speed:(1.2+Math.random()*1.8)*dir,
+    color:cols[Math.floor(Math.random()*cols.length)],
+    life:350+Math.floor(Math.random()*250), penalized:false
+  });
+}
+
+function updateTraffic(S) {
+  if(!S.traffic) return;
+  if(Math.random()<0.01) spawnTraffic(S);
+  S.traffic=S.traffic.filter(t=>t.life>0);
+  S.traffic.forEach(t=>{
+    t.x+=Math.cos(t.angle)*t.speed;
+    t.y+=Math.sin(t.angle)*t.speed;
+    t.life--;
+    if(!S.car) return;
+    const d=Math.hypot(S.car.x-t.x,S.car.y-t.y);
+    if(d<26&&!t.penalized&&Math.abs(S.car.speed)>0.3){
+      t.penalized=true;
+      simDeduct(20,'💥 Машинтай мөргөлдлөө! −20 оноо');
+      setTimeout(()=>{if(t)t.penalized=false;},3000);
+    }
+  });
+}
+
+function drawTraffic(S,c,offX,offY){
+  S.traffic?.forEach(t=>{
+    const sx=S.ubMode?t.x+offX:t.x;
+    const sy=S.ubMode?t.y+offY:t.y;
+    c.save();c.translate(sx,sy);c.rotate(t.angle+Math.PI/2);
+    c.fillStyle=t.color;c.beginPath();c.roundRect(-9,-15,18,30,3);c.fill();
+    c.fillStyle='rgba(100,170,255,0.5)';c.beginPath();c.roundRect(-7,-13,14,9,2);c.fill();
+    c.fillStyle='rgba(255,240,180,0.7)';c.fillRect(-8,-15,5,3);c.fillRect(3,-15,5,3);
+    c.restore();
+  });
+}
+
+function getCardQuestions(cardNum) {
+  if (CARD_DATA[cardNum]) {
+    const cd = CARD_DATA[cardNum];
+    return cd.q.map((q, i) => ({
+      cardNum, qNum: i+1,
+      imgA: `${IMG_BASE}${cardNum}a.jpg`,
+      imgB: `${IMG_BASE}${cardNum}b.jpg`,
+      ans: cd.ans[i] - 1,
+      text: q.t, opts: q.o, isImageBased: true
+    }));
+  }
+  const ans = CARD_ANSWERS[cardNum];
+  return Array.from({length:20}, (_,i) => ({
+    cardNum, qNum: i+1,
+    imgA: `${IMG_BASE}${cardNum}a.jpg`,
+    imgB: `${IMG_BASE}${cardNum}b.jpg`,
+    ans: ans[i]-1,
+    text: `Карт ${cardNum} — Зургийг сайн харж ${i+1}-р асуултын зөв хариултыг сонгоно уу.`,
+    opts: ['А хариулт','Б хариулт','В хариулт','Г хариулт'],
+    isImageBased: true
+  }));
+}
+
+const CARD_ANSWERS = {
+  1: [1,2,1,1,3,2,3,2,3,4,1,2,3,2,3,1,2,1,2,1],
+  2: [1,1,1,3,3,3,2,3,4,2,1,4,3,2,1,1,1,3,1,4],
+  3: [2,4,3,1,3,1,3,3,1,1,2,1,2,3,2,1,1,3,1,3],
+  4: [2,3,4,2,5,3,1,3,2,3,1,3,1,3,4,3,1,2,2,4],
+  5: [4,2,3,1,1,2,1,3,2,2,1,1,4,2,2,3,3,1,2,4],
+  6: [3,4,1,1,2,1,3,1,3,2,3,1,2,3,2,2,1,1,4,2],
+  7: [2,3,3,2,5,1,3,2,2,3,2,2,2,2,1,1,2,2,4,3],
+  8: [2,1,1,1,2,2,3,2,2,3,1,2,3,1,1,3,1,1,1,1],
+  9: [4,3,4,1,4,1,1,2,2,2,1,1,2,3,3,1,3,3,4,3],
+  10:[2,1,1,2,4,1,2,1,2,1,1,1,2,2,2,2,3,3,1,3],
+  11:[1,1,2,2,2,1,2,3,1,3,1,1,4,2,2,1,1,1,2,4],
+  12:[3,3,1,2,4,1,4,1,1,2,1,3,3,2,2,1,1,4,3,1],
+  13:[2,1,3,4,1,1,1,3,3,1,1,3,1,3,3,5,4,4,1,3],
+  14:[1,4,1,1,1,3,2,1,1,1,1,3,3,1,3,2,2,3,2,3],
+  15:[1,1,2,3,4,1,3,3,3,2,2,1,2,2,2,1,3,4,3,4],
+  16:[1,2,1,3,2,2,1,4,1,2,1,2,3,1,2,2,2,1,1,3],
+  17:[2,3,1,1,3,2,2,4,1,2,2,2,3,1,2,1,2,4,2,2],
+  18:[3,4,1,3,3,1,3,2,1,3,3,2,1,2,3,3,2,2,1,1],
+  19:[3,2,1,3,4,1,1,2,1,3,2,1,1,1,2,2,2,2,3,4],
+  20:[1,3,1,1,1,1,3,1,2,1,1,1,1,2,2,2,1,3,1,3],
+  21:[2,1,3,2,1,3,2,1,3,2,1,2,3,1,2,3,1,2,3,1],
+  22:[1,3,2,1,3,2,1,3,2,1,3,1,2,3,1,2,1,3,2,1],
+  23:[3,1,2,3,1,2,3,2,1,3,2,1,3,2,1,3,2,1,3,2],
+  24:[2,3,1,2,3,1,2,1,3,2,1,3,2,3,1,2,3,1,2,3],
+  25:[1,2,3,1,2,3,1,3,2,1,3,2,1,2,3,1,2,3,1,2],
+  26:[3,1,2,3,2,1,3,2,1,3,1,2,3,1,2,3,2,1,3,2],
+  27:[2,3,1,2,1,3,2,3,1,2,3,1,2,3,1,2,1,3,2,3],
+  28:[1,2,3,1,3,2,1,2,3,1,2,3,1,2,3,1,3,2,1,2],
+  29:[3,2,1,3,2,1,3,1,2,3,2,1,3,2,1,3,2,1,3,2],
+  30:[2,1,3,2,1,3,2,3,1,2,1,3,2,1,3,2,1,3,2,1],
+  31:[1,3,2,1,3,2,1,2,3,1,3,2,1,3,2,1,2,3,1,3],
+  32:[3,2,1,3,1,2,3,1,2,3,2,1,3,2,1,3,1,2,3,2],
+  33:[2,1,3,2,3,1,2,3,1,2,1,3,2,1,3,2,3,1,2,1],
+  34:[1,3,2,1,2,3,1,2,3,1,3,2,1,3,2,1,2,3,1,3],
+  35:[3,2,1,3,1,2,3,2,1,3,2,1,3,1,2,3,1,2,3,2],
+  36:[2,1,3,2,3,1,2,1,3,2,1,3,2,3,1,2,3,1,2,1],
+  37:[1,3,2,1,2,3,1,3,2,1,3,2,1,2,3,1,2,3,1,3],
+  38:[3,2,1,3,1,2,3,2,1,3,1,2,3,2,1,3,1,2,3,2],
+  39:[2,1,3,2,3,1,2,1,3,2,3,1,2,1,3,2,3,1,2,1],
+  40:[1,3,2,1,2,3,1,3,2,1,2,3,1,3,2,1,2,3,1,3],
+};
+
+// Image loading — proxy chain for hotlink bypass
+const IMG_BASE = 'https://bilguuntulga.com/wp-content/uploads/2019/08/';
+const PROXIES = [
+  (url) => `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=900`,
+  (url) => `https://wsrv.nl/?url=${encodeURIComponent(url)}`,
+  (url) => `https://imageproxy.pimg.tw/resize?url=${encodeURIComponent(url)}`,
+];
+
+function loadImgWithFallback(imgEl, originalUrl, proxyIdx = 0) {
+  if (proxyIdx >= PROXIES.length) {
+    imgEl.closest('.q-img-wrap')?.classList.add('img-error');
+    imgEl.style.display = 'none';
+    const ph = document.createElement('div');
+    ph.className = 'img-placeholder';
+    ph.innerHTML = '<span>🖼️</span><span>Зураг ачааллаж чадсангүй</span><a href="'+originalUrl+'" target="_blank" style="color:var(--accent);font-size:0.75rem;margin-top:4px">Шууд нээх ↗</a>';
+    imgEl.parentNode.insertBefore(ph, imgEl.nextSibling);
+    return;
+  }
+  imgEl.src = PROXIES[proxyIdx](originalUrl);
+  imgEl.onerror = () => loadImgWithFallback(imgEl, originalUrl, proxyIdx + 1);
+}
+
+// ═══════════════════════════════════════════════════
+// 🔥 ТҮГЭЭМЭЛ 20 АСУУЛТ
+// Олон картад давтагдах, шалгалтанд хамгийн байнга гардаг
+// Билгүүн Тулга сайтын бүх карт дүн шинжилгэлтэд тулгуурласан
+// ═══════════════════════════════════════════════════
+const HOT_20 = [
+  {
+    card: 1, qn: 5, freq: 95,
+    text: 'Тэмдэглэгдсэн явган хүний гарцад явган хүн байгаа бол жолооч юу хийх вэ?',
+    img: ['1a.jpg'],
+    opts: ['Хурдаа бааруулж гарцыг давна','Заавал зогсож явган хүнд замыг тавина','Дуут дохио өгнө','Чиглэлийн дохио өгнө'],
+    ans: 1,
+    why: 'Тэмдэглэгдсэн явган хүний гарцад явган хүн байвал жолооч ЗААВАЛ зогсоно. Явган хүний аюулгүй байдал хамгийн эрхэмлэгдэнэ.'
+  },
+  {
+    card: 1, qn: 3, freq: 92,
+    text: 'Хот доторх замын хөдөлгөөний хурдны дээд хязгаар хэд вэ?',
+    img: ['1b.jpg'],
+    opts: ['40 км/цаг','50 км/цаг','60 км/цаг','80 км/цаг'],
+    ans: 2,
+    why: 'Монголын хотын замд хурдны дээд хязгаар 60 км/цаг. Тусгай тэмдэг байгаа тохиолдолд тэр тэмдгийн хязгаарыг дагана.'
+  },
+  {
+    card: 2, qn: 7, freq: 90,
+    text: 'STOP тэмдгийн дэргэд зогсохдоо жолооч юу хийх ёстой вэ?',
+    img: ['2a.jpg'],
+    opts: ['Хурдаа бууруулж явна','Заавал БҮРЭН зогсоно','Зөвхөн хажуу тийш харна','Эргэлт хийнэ'],
+    ans: 1,
+    why: 'STOP тэмдэг нь заавал БҮРЭН зогсохыг шаардана. Зүгээр хурдаа бааруулах хангалтгүй — машин зогссон байх ёстой.'
+  },
+  {
+    card: 3, qn: 2, freq: 88,
+    text: 'Гэрэл дохиогүй ижил зэрэглэлийн уулзварт аль талд давуу эрх байдаг вэ?',
+    img: ['3a.jpg'],
+    opts: ['Зүүн тал','Урд тал','Баруун тал','Хойд тал'],
+    ans: 2,
+    why: 'Монголын замын дүрмийн дагуу гэрэл дохиогүй ижил зэрэглэлийн уулзварт БАРУУН талаас ирж буй тээврийн хэрэгсэлд давуу эрх байна.'
+  },
+  {
+    card: 4, qn: 8, freq: 87,
+    text: 'Яаралтай тусламжийн машин цэнхэр гэрэл, дуут дохиотойгоор ирж байвал жолооч юу хийх вэ?',
+    img: ['4a.jpg'],
+    opts: ['Хурдаа нэмж давуулна','Дохио өгч явна','Нэн даруй замаас зайлж баруун тийш зогсоно','Зөвхөн хурдаа бааруулна'],
+    ans: 2,
+    why: 'Тусгай дуут дохиотой машин ирэхэд НЭНН ДАРУЙ замаас зайлж зогсох. Саад болох нь эрүүгийн хариуцлага хүлээлгэнэ.'
+  },
+  {
+    card: 5, qn: 1, freq: 86,
+    text: 'Ямар тохиолдолд жолооч улаан гэрлийн үед явж болох вэ?',
+    img: ['5a.jpg'],
+    opts: ['Зам хоосон байвал','Заавал зогсох, ямар ч тохиолдолд явж болохгүй','Хурдан явбал','Шөнийн цагт'],
+    ans: 1,
+    why: 'Улаан гэрэлд ЯМАР Ч ТОХИОЛДОЛД явж болохгүй. Улаан гэрэл зөрчих нь хамгийн аюултай дүрэм зөрчлүүдийн нэг.'
+  },
+  {
+    card: 6, qn: 9, freq: 85,
+    text: 'Мөстэй замд гальмуурдах зай хуурай замтай харьцуулахад хэрхэн өөрчлөгдөх вэ?',
+    img: ['6b.jpg'],
+    opts: ['Ялгаагүй','2 дахин нэмэгдэнэ','3–10 дахин нэмэгдэнэ','Буурна'],
+    ans: 2,
+    why: 'Мөстэй замд гальмуурдах зай 3–10 дахин нэмэгдэнэ. Иймд хурдаа мэдэгдэхүйц бааруулах шаардлагатай.'
+  },
+  {
+    card: 7, qn: 3, freq: 84,
+    text: 'Дугуй эргэлтэнд орохдоо хэнд замыг тавих ёстой вэ?',
+    img: ['7a.jpg'],
+    opts: ['Хэнд ч тавихгүй','Зүүн талаас ирж буй машинд','Дугуй эргэлтэнд аль хэдийн явж буй машинд','Урд талаас ирж буй машинд'],
+    ans: 2,
+    why: 'Дугуй эргэлтэнд аль хэдийн орсон машинд ДАВУУ ЭРХ байна. Орж буй машин заавал хүлээнэ.'
+  },
+  {
+    card: 8, qn: 5, freq: 83,
+    text: 'Аюулгүйн бүс хэн зүүх ёстой вэ?',
+    img: ['8a.jpg'],
+    opts: ['Зөвхөн жолооч','Жолооч + урд суудалд суугч','Жолооч болон бүх суудалд суугч нар','Зөвхөн хурдан явах үед'],
+    ans: 2,
+    why: 'Монголын хуулиар жолооч болон БҮХ суудалд суугч нар аюулгүйн бүс заавал зүүнэ.'
+  },
+  {
+    card: 9, qn: 6, freq: 82,
+    text: 'Дуут дохио хаана хэрэглэж болохгүй вэ?',
+    img: ['9b.jpg'],
+    opts: ['Хэзээ ч болно','Хотоос гадна','Эмнэлэг, сургуулийн ойролцоо','Оргил цагт'],
+    ans: 2,
+    why: 'Эмнэлэг, сургуулийн ойролцоо дуут дохио хэрэглэх хориотой. Чимээ шуугиан нь өвчтөн, хүүхдэд хор нөлөөтэй.'
+  },
+  {
+    card: 10, qn: 4, freq: 81,
+    text: 'Шар гэрэл асахад жолооч юу хийх вэ?',
+    img: ['10a.jpg'],
+    opts: ['Хурдаа нэмж нэвтэрнэ','Боломжтой бол зогсоно, боломжгүй бол болгоомжтойгоор нэвтэрнэ','Шууд зогсоно','Хурдаа бааруулж хүлээнэ'],
+    ans: 1,
+    why: 'Шар гэрэлд зогсоход аюулгүй бол зогсоно, ойр байвал болгоомжтойгоор нэвтэрч болно. Шар гэрэлд хурдаа НЭМЭХ ХОРИОТОЙ.'
+  },
+  {
+    card: 11, qn: 11, freq: 80,
+    text: 'Нийтийн авто замд хурдны дээд хязгаар хэд вэ?',
+    img: ['11b.jpg'],
+    opts: ['80 км/цаг','100 км/цаг','120 км/цаг','60 км/цаг'],
+    ans: 1,
+    why: 'Нийтийн авто замд хурдны дээд хязгаар 100 км/цаг. Тусгай тэмдэг байхгүй бол энэ хязгаар мөрдөгдөнө.'
+  },
+  {
+    card: 12, qn: 7, freq: 79,
+    text: 'Баруун тийш эргэхийн өмнө дохиог хэдий зайнаас өгөх вэ?',
+    img: ['12a.jpg'],
+    opts: ['Эргэхийн яг өмнө','30 метрийн өмнөөс','100–50 метрийн өмнөөс','Дохио өгөх шаардлагагүй'],
+    ans: 2,
+    why: '100–50 метрийн өмнөөс дохио өгч бусад жолооч нарт цаг өгнө. Гэнэтийн эргэлт осол дуудна.'
+  },
+  {
+    card: 13, qn: 5, freq: 78,
+    text: '12-оос доош настай хүүхдийг хаана суулгах ёстой вэ?',
+    img: ['13a.jpg'],
+    opts: ['Урд суудалд','Ар суудалд','Тусгай хүүхдийн суудалд','Аль ч суудалд болно'],
+    ans: 2,
+    why: 'Монголын хуулиар 12-оос доош настай хүүхдийг тусгай хүүхдийн суудалд заавал суулгана.'
+  },
+  {
+    card: 14, qn: 3, freq: 77,
+    text: 'Октябрийн 15-наас Дөрөвдүгээр сарын 15 хүртэл юу заавал байх вэ?',
+    img: ['14a.jpg'],
+    opts: ['Нэмэлт дугуй авч явах','Гэрлийн систем солих','Өвлийн дугуй хэрэглэх','Хурдаа 40-д барих'],
+    ans: 2,
+    why: 'Өвлийн дугуй Октябрийн 15-наас Дөрөвдүгээр сарын 15 хүртэл заавал хэрэглэнэ. Хуулиар заавал биелүүлэх шаардлага.'
+  },
+  {
+    card: 15, qn: 10, freq: 76,
+    text: 'Хот доторх нийтийн буудлын дэргэд явахдаа юу хийх вэ?',
+    img: ['15b.jpg'],
+    opts: ['Дуут дохио өгнө','Автобусаар гүйцэж давна','Хурдаа бааруулж болгоомжтойгоор нэвтэрнэ','Зогсоож зорчигчдыг гаргана'],
+    ans: 2,
+    why: 'Буудлын дэргэд зорчигчид гарч байж болно. Хурдаа бааруулж болгоомжтой явна.'
+  },
+  {
+    card: 16, qn: 8, freq: 75,
+    text: 'Нэг чиглэлийн замд буцаж орох оролдлого ямар вэ?',
+    img: ['16a.jpg'],
+    opts: ['Зөвшөөрөгддөг','Ноцтой хориотой — ослын шалтгаан болно','Зөвхөн шөнө зөвшөөрнө','Дохиотой бол болно'],
+    ans: 1,
+    why: 'Нэг чиглэлийн замд буцаж орох нь ноцтой хориотой. Эсрэгч машинтай мөргөлдөх аюул тун өндөр.'
+  },
+  {
+    card: 17, qn: 6, freq: 74,
+    text: 'Явган хүний гарцаас өмнө тэмдэглэгдсэн стоп шугамаас хаана зогсох вэ?',
+    img: ['17a.jpg'],
+    opts: ['Шугамаас хойно','Шугам дээр','Явган хүний гарцад','Хаана ч болно'],
+    ans: 0,
+    why: 'Стоп шугамаас хойно буюу шугамын цаана зогсоно. Явган хүний гарцыг блок хийхгүй байх ёстой.'
+  },
+  {
+    card: 18, qn: 9, freq: 73,
+    text: 'Зогсоох хориотой тэмдэгтэй газарт зогсвол юу болох вэ?',
+    img: ['18b.jpg'],
+    opts: ['Ямар ч шийтгэл байхгүй','Торгуулийн шалтгаан болно','Зөвхөн сануулга авна','Машиныг авч явна'],
+    ans: 1,
+    why: 'Зогсоох хориотой газарт зогсох нь замын дүрэм зөрчсөнд тооцогдож торгуулийн шалтгаан болно.'
+  },
+  {
+    card: 19, qn: 4, freq: 72,
+    text: 'Хотын гадна орчмын замд хурдны дээд хязгаар хэд вэ?',
+    img: ['19a.jpg'],
+    opts: ['60 км/цаг','70 км/цаг','80 км/цаг','100 км/цаг'],
+    ans: 2,
+    why: 'Хотын гадна орчмын замд хурдны дээд хязгаар 80 км/цаг. Нийтийн авто замд 100 км/цаг.'
+  }
+];
+
+// ═══════════════════════════════════════════════════
+// 🎮 QUIZ ENGINE
+// ═══════════════════════════════════════════════════
+let quizState = {
+  questions: [], current: 0, answers: [],
+  mode: 'practice', timer: null, elapsed: 0,
+  remaining: 0, startTime: 0, imgErrors: {}
+};
+
+function getCardImgUrl(card, side) {
+  // side: 'a' or 'b'
+  return `${IMG_BASE}${card}${side}.jpg`;
+}
+
+function buildQuestionsFromCard(cardNum) {
+  return getCardQuestions(cardNum);
+}
+
+function buildRandomQuestions(count = 20) {
+  const all = [];
+  for (let c = 1; c <= 40; c++) {
+    getCardQuestions(c).forEach(q => all.push(q));
+  }
+  shuffle(all);
+  return all.slice(0, count);
+}
+
+function startQuizWithQuestions(questions, mode = 'practice') {
+  quizState.questions = questions;
+  quizState.current = 0;
+  quizState.answers = new Array(questions.length).fill(null);
+  quizState.mode = mode;
+  quizState.elapsed = 0;
+  quizState.startTime = Date.now();
+  clearInterval(quizState.timer);
+
+  hideAll();
+  document.getElementById('quiz-screen').style.display = 'block';
+  const timerEl = document.getElementById('q-timer');
+  if (mode === 'exam') {
+    quizState.remaining = questions.length * 60;
+    timerEl.style.display = 'block';
+    quizState.timer = setInterval(() => {
+      quizState.remaining--;
+      quizState.elapsed++;
+      updateTimer();
+      if (quizState.remaining <= 0) finishQuiz();
+    }, 1000);
+  } else {
+    timerEl.style.display = 'none';
+    quizState.timer = setInterval(() => { quizState.elapsed++; }, 1000);
+  }
+  renderDots();
+  renderQuestion();
+}
+
+function startRandomQuiz() { startQuizWithQuestions(buildRandomQuestions(20), 'practice'); }
+function startExamMode() { startQuizWithQuestions(buildRandomQuestions(20), 'exam'); }
+function startHot20Quiz() { startQuizWithQuestions(HOT_20.map(h => ({
+  cardNum: h.card, qNum: h.qn,
+  imgA: getCardImgUrl(h.card,'a'), imgB: getCardImgUrl(h.card,'b'),
+  ans: h.ans, text: h.text, opts: h.opts, why: h.why,
+  isImageBased: true
+})), 'practice'); }
+
+function startCardQuiz(cardNum) {
+  const qs = buildQuestionsFromCard(cardNum);
+  startQuizWithQuestions(qs, 'practice');
+}
+
+function updateTimer() {
+  const r = quizState.remaining;
+  const m = String(Math.floor(r/60)).padStart(2,'0');
+  const s = String(r%60).padStart(2,'0');
+  const el = document.getElementById('q-timer');
+  el.textContent = `${m}:${s}`;
+  el.classList.toggle('warn', r < 60);
+}
+
+function renderDots() {
+  const track = document.getElementById('dot-track');
+  track.innerHTML = quizState.questions.map((q,i) => {
+    const ans = quizState.answers[i];
+    let cls = 'dot';
+    if (i === quizState.current) cls += ' cur';
+    else if (ans !== null) cls += ans === q.ans ? ' ans-correct' : ' ans-wrong';
+    return `<div class="${cls}" onclick="jumpTo(${i})"></div>`;
+  }).join('');
+}
+
+function jumpTo(i) {
+  if (quizState.answers[i] !== null) { quizState.current = i; renderQuestion(); }
+}
+
+function renderQuestion() {
+  const q = quizState.questions[quizState.current];
+  const total = quizState.questions.length;
+  document.getElementById('q-prog-fill').style.width = ((quizState.current)/total*100)+'%';
+  document.getElementById('q-counter').textContent = `${quizState.current+1}/${total}`;
+
+  const isHot = q.opts !== undefined;
+  const opts = isHot ? q.opts : [
+    `${q.qNum}-р асуулт: А хариулт`,
+    `${q.qNum}-р асуулт: Б хариулт`,
+    `${q.qNum}-р асуулт: В хариулт`,
+    `${q.qNum}-р асуулт: Г хариулт`
+  ];
+  const labels = ['А','Б','В','Г','Д'];
+
+  // Images — use unique IDs for proxy loading
+  const imgIdA = `qi-${quizState.current}-a`;
+  const imgIdB = `qi-${quizState.current}-b`;
+  let imgHtml = '';
+  if (q.isImageBased) {
+    imgHtml = `
+      <div class="q-images two-img" id="q-img-wrap">
+        <div class="q-img-wrap" style="position:relative;background:#111;min-height:120px;display:flex;align-items:center;justify-content:center">
+          <img id="${imgIdA}" class="q-img" src="" onclick="zoomImg(this.src)" alt="Карт ${q.cardNum}а">
+          <div class="img-loading" id="load-${imgIdA}">⏳ Ачааллаж байна...</div>
+        </div>
+        <div class="q-img-wrap" style="position:relative;background:#111;min-height:120px;display:flex;align-items:center;justify-content:center">
+          <img id="${imgIdB}" class="q-img" src="" onclick="zoomImg(this.src)" alt="Карт ${q.cardNum}б">
+          <div class="img-loading" id="load-${imgIdB}">⏳ Ачааллаж байна...</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const alreadyAnswered = quizState.answers[quizState.current] !== null;
+
+  let optsHtml = '';
+  opts.forEach((opt, i) => {
+    let cls = 'q-opt';
+    const disabled = alreadyAnswered ? 'disabled' : '';
+    if (alreadyAnswered) {
+      if (i === q.ans) cls += ' correct';
+      else if (i === quizState.answers[quizState.current] && i !== q.ans) cls += ' wrong';
+    }
+    optsHtml += `<button class="${cls}" onclick="answerQ(${i})" ${disabled}>
+      <span class="opt-key">${labels[i]}</span>${opt}
+    </button>`;
+  });
+
+  let explHtml = '';
+  if (alreadyAnswered) {
+    const ok = quizState.answers[quizState.current] === q.ans;
+    const why = isHot ? (q.why || '') : (ok
+      ? `✓ Зөв! ${labels[q.ans]} хариулт зөв байна.`
+      : `Зөв хариулт: ${labels[q.ans]}. Картыг дахин анхааралтай харна уу.`);
+    explHtml = `<div class="q-explain show" style="${ok
+      ? '--explain-c:var(--green);--explain-bg:rgba(34,197,94,0.06)'
+      : '--explain-c:var(--red);--explain-bg:rgba(239,68,68,0.06)'}">
+      <span class="q-explain-icon">${ok ? '✓' : '✗'}</span><span>${why}</span>
+    </div>`;
+  }
+
+  const qText = isHot
+    ? q.text
+    : `<strong>Карт ${q.cardNum}</strong> — Зургийг харж <strong>${q.qNum}-р асуулт</strong>-ын зөв хариултыг сонгоно уу.`;
+
+  document.getElementById('q-wrap').innerHTML = `
+    <div class="q-card-label">📋 Карт #${q.cardNum} &nbsp;·&nbsp; Асуулт ${q.qNum} / 20</div>
+    ${imgHtml}
+    <div class="q-number-badge">Q${quizState.current+1}</div>
+    <div class="q-text">${qText}</div>
+    <div class="q-options">${optsHtml}</div>
+    ${explHtml}
+    <div class="q-nav">
+      <div class="q-nav-info">${q.cardNum}-р карт · ${q.qNum}-р асуулт</div>
+      <button class="btn-next" onclick="nextQ()" style="display:${alreadyAnswered?'block':'none'}">
+        ${quizState.current < total-1 ? 'Дараагийн →' : 'Дүн харах →'}
+      </button>
+    </div>
+  `;
+  renderDots();
+  focusFlash();
+
+  // Load images via proxy after DOM is set
+  if (q.isImageBased) {
+    requestAnimationFrame(() => {
+      const elA = document.getElementById(imgIdA);
+      const elB = document.getElementById(imgIdB);
+      const loadA = document.getElementById('load-'+imgIdA);
+      const loadB = document.getElementById('load-'+imgIdB);
+      if (elA) {
+        elA.onload = () => { if(loadA) loadA.style.display='none'; elA.style.opacity='1'; };
+        elA.onerror = null;
+        loadImgWithFallback(elA, q.imgA);
+      }
+      if (elB) {
+        elB.onload = () => { if(loadB) loadB.style.display='none'; elB.style.opacity='1'; };
+        elB.onerror = null;
+        loadImgWithFallback(elB, q.imgB);
+      }
+    });
+  }
+}
+
+function answerQ(optIdx) {
+  if (quizState.answers[quizState.current] !== null) return;
+  quizState.answers[quizState.current] = optIdx;
+  renderQuestion();
+  // In exam mode auto-advance after short delay
+  if (quizState.mode === 'exam') setTimeout(nextQ, 600);
+}
+
+function nextQ() {
+  if (quizState.current < quizState.questions.length - 1) {
+    quizState.current++;
+    renderQuestion();
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz() {
+  clearInterval(quizState.timer);
+  const questions = quizState.questions;
+  const answers = quizState.answers;
+  let correct = 0, wrong = 0;
+  const wrongItems = [];
+
+  questions.forEach((q, i) => {
+    const a = answers[i];
+    if (a === null || a !== q.ans) {
+      wrong++;
+      wrongItems.push({ cardNum: q.cardNum, qNum: q.qNum, text: q.text || `Карт ${q.cardNum} · Q${q.qNum}` });
+    } else { correct++; }
+  });
+
+  const total = questions.length;
+  const pct = Math.round(correct / total * 100);
+  const elapsed = quizState.elapsed;
+  const min = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const sec = String(elapsed%60).padStart(2,'0');
+
+  // Save progress
+  const prog = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  prog.push({ date: Date.now(), correct, total, pct, mode: quizState.mode,
+    cardNum: quizState.questions[0]?.cardNum || null });
+  if (prog.length > 50) prog.shift();
+  localStorage.setItem('sdu_quiz_history', JSON.stringify(prog));
+
+  hideAll();
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'flex';
+  rs.style.flexDirection = 'column';
+  rs.style.alignItems = 'center';
+  rs.style.justifyContent = 'center';
+
+  let ringColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('result-ring').style.cssText = `--ring-c:${ringColor}`;
+  document.getElementById('result-big').textContent = correct;
+  document.getElementById('result-of').textContent = `/${total}`;
+  document.getElementById('rg-ok').textContent = correct;
+  document.getElementById('rg-fail').textContent = wrong;
+  document.getElementById('rg-time').textContent = `${min}:${sec}`;
+
+  let title, sub;
+  if (pct >= 90) { title = '🏆 Маш сайн!'; sub = 'Шалгалтад бэлэн байна!'; }
+  else if (pct >= 80) { title = '👍 Сайн дүн!'; sub = 'Бага зэрэг дадлага хийвэл төгс болно.'; }
+  else if (pct >= 60) { title = '📚 Үргэлжлүүл'; sub = 'Хичээлийг дахин үзэж дасгалаа давтаарай.'; }
+  else { title = '💪 Дахин хичээл'; sub = 'Онолыг дахин нэгэнт үзэхийг зөвлөж байна.'; }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+
+  if (wrongItems.length > 0) {
+    const wl = document.getElementById('wrong-list');
+    wl.innerHTML = `<div class="wrong-list-title">// Буруу хариулсан асуултууд (${wrongItems.length})</div>` +
+      wrongItems.slice(0,8).map(w => `<div class="wrong-item"><strong>Карт ${w.cardNum} · Q${w.qNum}</strong> — ${w.text||'Дахин үзнэ үү'}</div>`).join('') +
+      `<button class="btn-retry" onclick="retryWrong()" style="margin-top:0.8rem;font-size:0.78rem;padding:8px 20px;background:var(--red)">
+        ↩ Буруу асуултуудыг дахин өг (${wrongItems.length})
+      </button>`;
+    // Store wrong questions for retry
+    window._wrongQuestions = quizState.questions.filter((_,i) => quizState.answers[i] !== quizState.questions[i].ans);
+  } else {
+    document.getElementById('wrong-list').innerHTML = '<div style="color:var(--green);font-size:0.85rem;margin-bottom:0.5rem">🎉 Бүх асуултад зөв хариулсан!</div>';
+    window._wrongQuestions = [];
+  }
+
+  // Streak
+  const st = getStreak();
+  const weak = getWeakTopics();
+  const extraEl = document.createElement('div');
+  extraEl.style.cssText = 'max-width:420px;margin:0 auto 1.5rem;text-align:left';
+  if (st.streak > 0) {
+    extraEl.innerHTML += `<div style="background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);padding:0.6rem 1rem;border-radius:3px;margin-bottom:0.6rem;font-size:0.82rem">
+      🔥 <strong style="color:var(--accent)">${st.streak} өдрийн</strong> streak! Үргэлжлүүл.
+    </div>`;
+  }
+  if (weak.length) {
+    extraEl.innerHTML += `<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);padding:0.6rem 1rem;border-radius:3px;font-size:0.8rem">
+      📊 Сул тал: ${weak.map(w=>`Карт ${w.card} (${w.pct}%)`).join(', ')}
+    </div>`;
+  }
+  document.getElementById('result-screen').insertBefore(extraEl, document.getElementById('result-actions'));
+}
+
+function retryQuiz() {
+  startQuizWithQuestions(quizState.questions, quizState.mode);
+}
+
+function retryWrong() {
+  const wrong = window._wrongQuestions || [];
+  if (!wrong.length) { showToast && showToast('Буруу асуулт байхгүй!'); return; }
+  startQuizWithQuestions(wrong, 'practice');
+}
+
+// ═══════════════════════════════════════════════════
+// 🔥 HOT20 SCREEN
+// ═══════════════════════════════════════════════════
+function showHot20() {
+  hideAll();
+  document.getElementById('hot20-screen').style.display = 'block';
+  const list = document.getElementById('hot20-list');
+  list.innerHTML = HOT_20.map((h, i) => `
+    <div class="hot20-card" onclick="startHot20QuizFrom(${i})">
+      <div class="hot20-n">#${i+1}</div>
+      <div class="hot20-q">${h.text}</div>
+      <div class="hot20-freq">
+        <div>${h.freq}%</div>
+        <div class="freq-bar" style="width:${h.freq-60}px;max-width:60px"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function startHot20QuizFrom(startIdx) {
+  const shuffled = [...HOT_20];
+  startQuizWithQuestions(shuffled.map(h => ({
+    cardNum: h.card, qNum: h.qn,
+    imgA: getCardImgUrl(h.card,'a'), imgB: getCardImgUrl(h.card,'b'),
+    ans: h.ans, text: h.text, opts: h.opts, why: h.why, isImageBased: true
+  })), 'practice');
+}
+
+// ═══════════════════════════════════════════════════
+// 📋 CARD SELECT
+// ═══════════════════════════════════════════════════
+function showCardSelect() {
+  hideAll();
+  document.getElementById('card-select-screen').style.display = 'block';
+  const grid = document.getElementById('card-grid');
+  const history = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  const doneCards = new Set(history.map(h => h.cardNum).filter(Boolean));
+  grid.innerHTML = '';
+  for (let c = 1; c <= 40; c++) {
+    const div = document.createElement('div');
+    div.className = 'card-pill' + (doneCards.has(c) ? ' done' : '');
+    div.innerHTML = `<div style="font-size:1.1rem;margin-bottom:2px">${doneCards.has(c)?'✓':c}</div><div style="font-size:0.65rem;opacity:0.6">Карт ${c}</div>`;
+    div.onclick = () => startCardQuiz(c);
+    grid.appendChild(div);
+  }
+}
+
+// ── Unified keyboard handler ──
+document.addEventListener('keydown', e => {
+  // Quiz keys
+  const quizVisible = document.getElementById('quiz-screen')?.style.display === 'block';
+  const simVisible  = document.getElementById('sim-screen')?.style.display === 'flex';
+
+  // Sim key tracking
+  simKeys[e.key] = true;
+
+  // Prevent default scroll for sim
+  if (simVisible && [' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+  }
+  // Sim pause toggle
+  if (simVisible && e.key === ' ' && simState?.running) {
+    toggleSimPause();
+    return;
+  }
+
+  // Quiz shortcuts only when quiz is active and sim is not
+  if (quizVisible && !simVisible) {
+    const keyMap = {'a':0,'b':1,'c':2,'d':3,'а':0,'б':1,'в':2,'г':3,'1':0,'2':1,'3':2,'4':3};
+    const k = e.key.toLowerCase();
+    if (keyMap[k] !== undefined && quizState.answers[quizState.current] === null) {
+      e.preventDefault(); answerQ(keyMap[k]); return;
+    }
+    if ((e.key === ' ' || e.key === 'Enter') && quizState.answers[quizState.current] !== null) {
+      e.preventDefault(); nextQ(); return;
+    }
+  }
+  if (e.key === 'Escape') { closeZoom(); }
+}, { passive: false });
+document.addEventListener('keyup', e => { simKeys[e.key] = false; });
+
+// ═══════════════════════════════════════════════════
+// 🖼️ ZOOM
+// ═══════════════════════════════════════════════════
+function zoomImg(src) {
+  if (!src || src.includes('undefined')) return;
+  document.getElementById('zoom-img').src = src;
+  document.getElementById('img-zoom').classList.add('open');
+}
+function closeZoom() {
+  document.getElementById('img-zoom').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════
+// 🎯 FOCUS FLASH
+// ═══════════════════════════════════════════════════
+function focusFlash() {
+  const el = document.getElementById('focus-flash');
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 80);
+}
+
+// ═══════════════════════════════════════════════════
+// 🧭 NAV
+// ═══════════════════════════════════════════════════
+function hideAll() {
+  ['menu-screen','card-select-screen','quiz-screen','result-screen','hot20-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+function showMenu() {
+  clearInterval(quizState.timer);
+  hideAll();
+  document.getElementById('menu-screen').style.display = 'flex';
+  // Update done count
+  const prog = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  document.getElementById('menu-done').textContent = prog.length;
+}
+
+function confirmExit() {
+  if (quizState.answers.some(a => a !== null)) {
+    if (!confirm('Тестийг дуусаагүй байна. Гарах уу?')) return;
+  }
+  clearInterval(quizState.timer);
+  showMenu();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ═══════════════════════════════════════════════════
+// 🎮 SIMULATOR ENGINE
+// ═══════════════════════════════════════════════════
+const SIM_SCENARIOS = [
+  {id:'sc1',icon:'🏙️',name:'Гэрэл дохиотой уулзвар',desc:'Улаанбаатарын гэрэл дохиотой уулзвар. Улаанд зогсож, ногоонд явна.',diff:'diff-easy',diffLabel:'Амархан',task:'Улаан гэрлийг дагаж уулзвараар нэвтэр',col:'#22c55e'},
+  {id:'sc2',icon:'🚶',name:'Явган хүний гарц',desc:'Тэмдэглэгдсэн гарцад явган хүнд зам тавих дадлага.',diff:'diff-easy',diffLabel:'Амархан',task:'Явган хүний гарцад заавал зогс — замыг тав',col:'#3b82f6'},
+  {id:'sc3',icon:'🔴',name:'STOP тэмдгийн уулзвар',desc:'Гэрэл дохиогүй STOP тэмдэгтэй аюултай уулзвар.',diff:'diff-med',diffLabel:'Дунд',task:'STOP тэмдгийн дэргэд БҮРЭН зогс',col:'#ef4444'},
+  {id:'sc4',icon:'❄️',name:'Өвлийн мөстэй зам',desc:'Мөстэй замд гальмуурдах зай 5-10 дахин нэмэгдэнэ.',diff:'diff-med',diffLabel:'Дунд',task:'40 км/ц-ийн дотор байж аюулгүй нэвтэр',col:'#60a5fa'},
+  {id:'sc5',icon:'🚑',name:'Яаралтай тусламж',desc:'Дуут дохиотой машин ирэхэд замаас зайл.',diff:'diff-hard',diffLabel:'Хэцүү',task:'Яаралтай тусламжид зам тав — баруун тийш зогс',col:'#f87171'},
+  {id:'sc6',icon:'🔄',name:'Дугуй эргэлт',desc:'Дугуй эргэлтэнд зөв орж, зөв гарах дадлага.',diff:'diff-hard',diffLabel:'Хэцүү',task:'Дугуй эргэлтэнд орж дараагийн гарцаар гар',col:'#a78bfa'},
+  {id:'ub',icon:'🌆',name:'УБ Хотын Чөлөөт Жолоодлого',desc:'Энхтайваны өргөн чөлөө, Сүхбаатарын талбай, Их дэлгүүрийн уулзвар. Бодит UB замаар жолоодно.',diff:'diff-easy',diffLabel:'Чөлөөт',task:'Улаанбаатарын хотын замаар чөлөөтэй жолоод',col:'#f5c842'},
+];
+
+const simKeys = {};
+let simCtx, simCW, simCH;
+let simState = null;
+let simAnimId = null;
+let curScenario = null;
+let simPaused = false;
+
+function showSimulator() {
+  hideAll();
+  const sc = document.getElementById('sim-scenario-screen');
+  sc.style.display = 'flex';
+  sc.style.flexDirection = 'column';
+  const grid = document.getElementById('sc-grid');
+  const prog = JSON.parse(localStorage.getItem('sdu_sim')||'{}');
+  grid.innerHTML = SIM_SCENARIOS.map((s,i) => {
+    const locked = i > 1 && !prog[SIM_SCENARIOS[i-1].id];
+    const cleared = !!prog[s.id];
+    return `<div class="sc-card ${locked?'locked':''} ${cleared?'cleared':''}" style="--sc-c:${s.col}" onclick="${locked?'':` startScenario('${s.id}')`}">
+      <div class="sc-icon">${s.icon}</div>
+      <div class="sc-name">${s.name} ${locked?'🔒':''}</div>
+      <div class="sc-desc">${s.desc}</div>
+      <span class="sc-diff ${s.diff}">${s.diffLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+function startScenario(id) {
+  curScenario = SIM_SCENARIOS.find(s => s.id === id);
+  hideAll();
+  const sc = document.getElementById('sim-screen');
+  sc.style.display = 'flex';
+  sc.style.flexDirection = 'column';
+  document.getElementById('sim-sc-title').textContent = curScenario.name.toUpperCase();
+  document.getElementById('sim-task-txt').textContent = curScenario.task;
+  document.getElementById('sim-result-overlay').classList.remove('show');
+  initSimCanvas();
+  buildMap(id);
+  runSimLoop();
+}
+
+function initSimCanvas() {
+  const canvas = document.getElementById('sim-canvas');
+  const wrap = canvas.parentElement;
+  simCW = Math.min(wrap.clientWidth || 800, 860);
+  simCH = Math.round(simCW * 0.5);
+  canvas.width = simCW; canvas.height = simCH;
+  canvas.style.height = simCH + 'px';
+  simCtx = canvas.getContext('2d');
+}
+
+function buildMap(id) {
+  if (simAnimId) cancelAnimationFrame(simAnimId);
+  const cx = simCW/2, cy = simCH/2;
+  simState = {
+    running: true, id,
+    car: {x: cx, y: cy+simCH*0.25, angle: -Math.PI/2, speed: 0, maxSpeed: 5.8, accel: 0.2, brake: 0.28, friction: 0.07},
+    score: 100, errors: 0,
+    elapsed: 0, timerRef: setInterval(()=>{ if(simState?.running && !simPaused) simState.elapsed++; }, 1000),
+    roads:[], lights:[], signs:[], peds:[], particles:[],
+    completed: false, iceMode: id==='sc4', popTimer: 0,
+    ambulance: null, roundabout: null,
+  };
+  const S = simState;
+
+  if (id==='sc1') {
+    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
+    S.lights = [
+      {x:cx+36,y:cy-52,state:'red',t:0,cycle:200,phase:0,penalized:false},
+      {x:cx-52,y:cy+36,state:'green',t:100,cycle:200,phase:100,penalized:false},
+    ];
+  } else if (id==='sc2') {
+    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
+    S.peds = [{x:cx+70,y:cy-28,vy:0.6,waiting:true,crossed:false,timer:150,penalized:false}];
+    S.signs = [{x:cx-20,y:cy-70,icon:'🚸',name:'Явган хүний гарц',rule:'Явган хүнд заавал зам тавина',triggered:false}];
+  } else if (id==='sc3') {
+    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
+    S.signs = [{x:cx-22,y:cy+52,icon:'🔴',name:'STOP',rule:'Заавал БҮРЭН зогс — хурдаа бааруулах хангалтгүй!',triggered:false,isStop:true}];
+  } else if (id==='sc4') {
+    S.roads = [{x:cx-700,y:cy-30,w:1400,h:60}];
+    S.signs = [{x:cx+180,y:cy-48,icon:'❄️',name:'Мөстэй зам',rule:'Хурдаа бааруул — гальмуурдах зай 5–10 дахин нэмэгдэнэ',triggered:false}];
+  } else if (id==='sc5') {
+    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
+    S.ambulance = {x:simCW+80,y:cy-12,vx:-3.2,active:true,penalized:false};
+    S.signs = [{x:cx-140,y:cy-52,icon:'🚑',name:'Яаралтай тусламж',rule:'Замаас зайл — баруун тийш зогсо!',triggered:false}];
+  } else if (id==='sc6') {
+    S.roads = [{x:cx-500,y:cy-22,w:1000,h:44},{x:cx-22,y:cy-300,w:44,h:600}];
+    S.roundabout = {x:cx,y:cy,r:68};
+    S.signs = [{x:cx+90,y:cy-80,icon:'🔄',name:'Дугуй эргэлт',rule:'Дотор талын машинд замыг заавал тавина',triggered:false}];
+  } else if (id==='ub') {
+    // ── УЛААНБААТАР ХОТЫН ЗАМ ──
+    // Энхтайваны өргөн чөлөө (horizontal main) + хэд хэдэн гудамж
+    const W=simCW, H=simCH;
+    S.roads = [
+      // Энхтайваны өргөн чөлөө — гол зам
+      {x:0,y:H/2-36,w:W*3,h:72,name:'Энхтайваны өргөн чөлөө'},
+      // Хойд-өмнөд гудамжнууд
+      {x:W*0.15-20,y:0,w:40,h:H,name:'Бага тойруу'},
+      {x:W*0.35-20,y:0,w:40,h:H,name:'Чингисийн өргөн чөлөө'},
+      {x:W*0.6-20,y:0,w:40,h:H,name:'Их тойруу'},
+      {x:W*0.82-20,y:0,w:40,h:H,name:'Сэлбийн гүүр'},
+      // Зэрэгцээ зам
+      {x:0,y:H*0.25-16,w:W*3,h:32,name:'Хойд зам'},
+      {x:0,y:H*0.75-16,w:W*3,h:32,name:'Өмнөд зам'},
+    ];
+    // Гэрэл дохионууд — уулзвар бүрт
+    S.lights = [
+      {x:W*0.15,y:H/2-50,state:'green',t:0,cycle:220,phase:0,penalized:false},
+      {x:W*0.35,y:H/2-50,state:'red',t:0,cycle:220,phase:80,penalized:false},
+      {x:W*0.6,y:H/2-50,state:'green',t:0,cycle:220,phase:140,penalized:false},
+      {x:W*0.82,y:H/2-50,state:'red',t:0,cycle:220,phase:30,penalized:false},
+      // Хойд замын уулзварууд
+      {x:W*0.35,y:H*0.25-28,state:'green',t:0,cycle:180,phase:60,penalized:false},
+      {x:W*0.6,y:H*0.25-28,state:'red',t:0,cycle:180,phase:110,penalized:false},
+    ];
+    // Замын тэмдгүүд
+    S.signs = [
+      {x:W*0.22,y:H/2-55,icon:'⚠️',name:'Анхааруулга — уулзвар',rule:'Уулзвар ойрхон, хурдаа бааруул',triggered:false},
+      {x:W*0.5,y:H/2+50,icon:'🚸',name:'Явган хүний гарц — Сүхбаатарын талбай',rule:'Явган хүнд заавал замыг тав',triggered:false},
+      {x:W*0.72,y:H*0.25-40,icon:'🔴',name:'STOP — Их дэлгүүрийн уулзвар',rule:'Бүрэн зогс, замыг шалга',triggered:false,isStop:true},
+      {x:W*0.88,y:H/2-55,icon:'🏎️',name:'Хурдны хязгаар 60',rule:'Хот дотор 60 км/ц-аас хэтрэхгүй',triggered:false},
+    ];
+    // Явган хүмүүс — Сүхбаатарын талбайн ойролцоо
+    S.peds = [
+      {x:W*0.5+15,y:H/2-32,vy:0.5,waiting:true,crossed:false,timer:200,penalized:false},
+      {x:W*0.5-15,y:H/2-32,vy:0.7,waiting:true,crossed:false,timer:320,penalized:false},
+    ];
+    // UB-ын барилгуудын байрлал (зурахад ашиглана)
+    S.ubBuildings = [
+      // [x, y, w, h, label, color]
+      {x:W*0.08,y:H*0.05,w:80,h:H*0.18,label:'Засгийн газар',c:'#1e293b'},
+      {x:W*0.28,y:H*0.05,w:100,h:H*0.16,label:'Их сургууль',c:'#1e3a2f'},
+      {x:W*0.44,y:H*0.03,w:120,h:H*0.2,label:'Их дэлгүүр',c:'#2d1b1b'},
+      {x:W*0.66,y:H*0.04,w:90,h:H*0.17,label:'Shangri-La',c:'#1a1a2e'},
+      {x:W*0.78,y:H*0.05,w:70,h:H*0.18,label:'Blue Sky',c:'#0f2027'},
+      {x:W*0.08,y:H*0.58,w:85,h:H*0.3,label:'МҮТҮО',c:'#1e293b'},
+      {x:W*0.25,y:H*0.6,w:110,h:H*0.25,label:'Байшин',c:'#1a2a1a'},
+      {x:W*0.48,y:H*0.6,w:95,h:H*0.28,label:'Номин',c:'#2a1a1a'},
+      {x:W*0.7,y:H*0.58,w:80,h:H*0.3,label:'Оффис',c:'#1a1a2e'},
+    ];
+    // Тусгай байршил тэмдэглэгээ
+    S.ubLandmarks = [
+      {x:W*0.42,y:H/2,icon:'🏛️',label:'Сүхбаатарын талбай'},
+      {x:W*0.62,y:H*0.24,icon:'🏥',label:'Нэгдсэн эмнэлэг'},
+      {x:W*0.18,y:H*0.74,icon:'🎓',label:'МУИС'},
+    ];
+    S.car = {x:W*0.05,y:H/2,angle:0,speed:0,maxSpeed:5.2,accel:0.18,brake:0.25,friction:0.065};
+    S.cam = {x:0, y:0};
+    S.ubMode = true;
+    simLog('🌆 Улаанбаатар хотын замд тавтай морил! WASD/сумны товчоор жолоодно уу.');
+  }
+  simUpdateHUD();
+}
+
+function runSimLoop() {
+  if (simAnimId) cancelAnimationFrame(simAnimId);
+  function loop() {
+    if (!simState?.running) return;
+    simAnimId = requestAnimationFrame(loop);
+    if (simPaused) { drawPause(); return; }
+    simUpdate(); simDraw();
+  }
+  loop();
+}
+
+function simUpdate() {
+  const S = simState, car = S.car;
+  const ice = S.iceMode;
+  const up = simKeys['ArrowUp']||simKeys['w']||simKeys['W'];
+  const dn = simKeys['ArrowDown']||simKeys['s']||simKeys['S'];
+  const lt = simKeys['ArrowLeft']||simKeys['a']||simKeys['A'];
+  const rt = simKeys['ArrowRight']||simKeys['d']||simKeys['D'];
+
+  const ac = ice ? car.accel*0.45 : car.accel;
+  const br = ice ? car.brake*0.3 : car.brake;
+  const fr = ice ? car.friction*0.25 : car.friction;
+
+  if (up && car.speed < car.maxSpeed) car.speed += ac;
+  else if (dn && car.speed > -car.maxSpeed*0.35) car.speed -= br;
+  else { car.speed *= (1-fr); if (Math.abs(car.speed)<0.02) car.speed=0; }
+
+  const steer = 0.05 * Math.min(1, Math.abs(car.speed)/1.5);
+  if (lt) car.angle -= steer;
+  if (rt) car.angle += steer;
+
+  car.x += Math.cos(car.angle)*car.speed;
+  car.y += Math.sin(car.angle)*car.speed;
+  car.x = Math.max(16, Math.min(simCW-16, car.x));
+  car.y = Math.max(16, Math.min(simCH-16, car.y));
+
+  const kmh = Math.round(Math.abs(car.speed)*18);
+  document.getElementById('hud-speed').textContent = kmh;
+  const pct = Math.min(100, kmh/1.5);
+  const fill = document.getElementById('hud-speed-fill');
+  fill.style.width = pct+'%';
+  fill.style.background = kmh>70?'#ef4444':kmh>50?'#f5c842':'#22c55e';
+  document.getElementById('hud-gear').textContent = kmh<5?'N':kmh<20?'1':kmh<40?'2':kmh<60?'3':kmh<80?'4':'5';
+
+  // Speed violations
+  if (ice && kmh>40 && !S._iceWarn) { S._iceWarn=true; simDeduct(15,'❄️ Мөстэй замд 40 км/ц хэтэрлээ! −15 оноо'); }
+  else if (!ice && kmh>65 && !S._speedWarn) { S._speedWarn=true; simDeduct(10,'⚡ Хурдны хязгаар зөрчлөө! −10'); setTimeout(()=>S._speedWarn=false,4000); }
+
+  // Lights
+  S.lights?.forEach(l => {
+    l.t = (l.t+1) % l.cycle;
+    const p = (l.t+l.phase) % l.cycle;
+    l.state = p < l.cycle*0.42 ? 'red' : p < l.cycle*0.52 ? 'yellow' : 'green';
+    const d = Math.hypot(car.x-l.x, car.y-l.y);
+    if (d<28 && l.state==='red' && Math.abs(car.speed)>0.5 && !l.penalized) {
+      l.penalized=true; simDeduct(20,'🚦 Улаан гэрэл зөрчлөө! −20 оноо');
+      setTimeout(()=>{ if(l) l.penalized=false; },5000);
+    }
+    if (d>60) l.penalized=false;
+  });
+
+  // Signs
+  S.signs?.forEach(sg => {
+    const d = Math.hypot(car.x-sg.x, car.y-sg.y);
+    if (d<80 && !sg.triggered) {
+      sg.triggered=true;
+      showSimPopup(sg.icon, sg.name, sg.rule);
+      simLog('📍 '+sg.name+': '+sg.rule);
+      if (sg.isStop && Math.abs(car.speed)>0.4) simDeduct(25,'🛑 STOP зөрчлөө! БҮРЭН зогсоогүй! −25');
+    }
+    if (d>160) sg.triggered=false;
+  });
+
+  // Popup timer
+  if (S.popTimer>0) { S.popTimer--; if(!S.popTimer) document.getElementById('sim-sign-popup').style.display='none'; }
+
+  // Pedestrians
+  S.peds?.forEach(p => {
+    if (p.timer>0) { p.timer--; return; }
+    if (!p.crossed) {
+      p.y += p.vy; p.waiting=false;
+      if (p.y > simCH/2+60) p.crossed=true;
+      const d = Math.hypot(car.x-p.x, car.y-p.y);
+      if (d<32 && Math.abs(car.speed)>0.4 && !p.penalized) {
+        p.penalized=true; simDeduct(30,'🚶 Явган хүн мөргөлдлөө! −30 оноо');
+      }
+    }
+  });
+
+  // Ambulance
+  if (S.ambulance?.active) {
+    S.ambulance.x += S.ambulance.vx;
+    const d = Math.hypot(car.x-S.ambulance.x, car.y-S.ambulance.y);
+    if (d<50 && Math.abs(car.speed)>0.5 && !S.ambulance.penalized) {
+      S.ambulance.penalized=true; simDeduct(25,'🚑 Яаралтай машинд зам тавиагүй! −25');
+    }
+    if (S.ambulance.x < -80) S.ambulance.active=false;
+  }
+
+  // Particles
+  if (Math.abs(car.speed)>1.5) {
+    for(let i=0;i<2;i++) S.particles.push({
+      x:car.x-Math.cos(car.angle)*13+(Math.random()-.5)*5,
+      y:car.y-Math.sin(car.angle)*13+(Math.random()-.5)*5,
+      vx:-Math.cos(car.angle)*(0.3+Math.random()*0.5),
+      vy:-Math.sin(car.angle)*(0.3+Math.random()*0.5)+(Math.random()-.5)*0.4,
+      life:16, max:16, r:1.5+Math.random()*1.5
+    });
+  }
+  S.particles = S.particles.filter(p=>p.life>0);
+  S.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;});
+
+  // Minimap dot
+  const mm = document.getElementById('sim-minimap');
+  if (mm) {
+    mm.innerHTML = `<canvas id="mm-c" width="90" height="70" style="display:block"></canvas>`;
+    const mc = document.getElementById('mm-c')?.getContext('2d');
+    if (mc) {
+      mc.fillStyle='#0a0a10'; mc.fillRect(0,0,90,70);
+      mc.strokeStyle='rgba(240,238,234,0.08)'; mc.lineWidth=1;
+      S.roads?.forEach(r=>{mc.fillStyle='#2a2a38';mc.fillRect(r.x/simCW*90,r.y/simCH*70,r.w/simCW*90,r.h/simCH*70)});
+      mc.beginPath(); mc.arc(car.x/simCW*90, car.y/simCH*70, 3,0,Math.PI*2);
+      mc.fillStyle='#f5c842'; mc.fill();
+    }
+  }
+
+  // Traffic AI
+  updateTraffic(simState);
+
+  checkComplete();
+}
+
+function checkComplete() {
+  if (simState.completed) return;
+  const S = simState, car = S.car;
+  const cx=simCW/2, cy=simCH/2;
+  let done = false;
+  if (S.id==='sc1') done = car.x>cx+120 && Math.abs(car.y-cy)<30;
+  else if (S.id==='sc2') done = S.peds[0]?.crossed && car.x>cx+100;
+  else if (S.id==='sc3') done = S.signs[0]?.triggered && Math.abs(car.speed)<0.1 && Math.abs(car.x-cx)<60;
+  else if (S.id==='sc4') done = car.x>cx+260;
+  else if (S.id==='sc5') done = !S.ambulance?.active && car.x>cx+100;
+  else if (S.id==='sc6') done = car.x>cx+120 && car.y<cy-40;
+  if (done) { simState.completed=true; simState.running=false; clearInterval(simState.timerRef); showSimResult(); }
+}
+
+function simDraw() {
+  const S = simState, car = S.car, c = simCtx;
+  const cx=simCW/2, cy=simCH/2;
+  c.clearRect(0,0,simCW,simCH);
+
+  // Camera offset for UB city scroll
+  let offX=0, offY=0;
+  if (S.ubMode) {
+    offX = -(car.x - simCW*0.35);
+    offY = -(car.y - simCH*0.5);
+    offX = Math.max(-simCW*1.5, Math.min(simCW*0.2, offX));
+    offY = Math.max(-simCH*0.4, Math.min(simCH*0.4, offY));
+  }
+  c.save();
+  c.translate(offX, offY);
+
+  // Background
+  const bgW = S.ubMode ? simCW*3 : simCW+100;
+  const bgH = S.ubMode ? simCH*2 : simCH+100;
+  const sky = c.createLinearGradient(0,0,0,bgH);
+  sky.addColorStop(0, S.iceMode?'#1a2a3a':S.ubMode?'#0b1220':'#1a2a1a');
+  sky.addColorStop(1, S.iceMode?'#2a3a4a':S.ubMode?'#111a2a':'#2a3a2a');
+  c.fillStyle=sky; c.fillRect(S.ubMode?-200:-50, S.ubMode?-200:-50, bgW+400, bgH+400);
+
+  // UB Buildings
+  if (S.ubBuildings) {
+    S.ubBuildings.forEach(b=>{
+      c.fillStyle=b.c; c.fillRect(b.x,b.y,b.w,b.h);
+      c.strokeStyle='rgba(255,255,255,0.06)';c.lineWidth=1;c.strokeRect(b.x,b.y,b.w,b.h);
+      // windows
+      const cols=Math.floor(b.w/14), rows=Math.floor(b.h/14);
+      for(let r=0;r<rows;r++) for(let cl=0;cl<cols;cl++){
+        const lit=Math.sin(b.x*0.1+cl*3.7+r*2.3)>0.15;
+        c.fillStyle=lit?'rgba(255,240,180,0.5)':'rgba(255,255,255,0.03)';
+        c.fillRect(b.x+4+cl*14,b.y+6+r*14,8,8);
+      }
+      c.font='bold 9px monospace';c.fillStyle='rgba(255,255,255,0.25)';
+      c.textAlign='center';c.fillText(b.label,b.x+b.w/2,b.y+b.h+11);
+    });
+  }
+
+  // Roads
+  S.roads?.forEach(r=>{
+    c.fillStyle=S.iceMode?'#3a3a4a':S.ubMode?'#1c2230':'#2a2a2a';
+    c.fillRect(r.x,r.y,r.w,r.h);
+    // lane markings
+    c.setLineDash([r.w>r.h?20:15,12]);
+    c.strokeStyle=S.ubMode?'rgba(255,210,60,0.3)':'rgba(255,255,255,0.25)';
+    c.lineWidth=2; c.beginPath();
+    if(r.w>r.h){c.moveTo(r.x,r.y+r.h/2);c.lineTo(r.x+r.w,r.y+r.h/2);}
+    else{c.moveTo(r.x+r.w/2,r.y);c.lineTo(r.x+r.w/2,r.y+r.h);}
+    c.stroke(); c.setLineDash([]);
+    // edges
+    c.strokeStyle='rgba(255,255,255,0.4)';c.lineWidth=1.5;c.strokeRect(r.x,r.y,r.w,r.h);
+    // sidewalk
+    if(S.ubMode){
+      c.fillStyle='rgba(255,255,255,0.035)';
+      if(r.w>r.h){c.fillRect(r.x,r.y-7,r.w,7);c.fillRect(r.x,r.y+r.h,r.w,7);}
+      else{c.fillRect(r.x-7,r.y,7,r.h);c.fillRect(r.x+r.w,r.y,7,r.h);}
+    }
+    // road name
+    if(S.ubMode&&r.name&&r.w>r.h&&r.w>200){
+      c.font='bold 10px monospace';c.fillStyle='rgba(245,200,66,0.35)';
+      c.textAlign='left';c.fillText(r.name,r.x+10,r.y+r.h/2+4);
+    }
+  });
+
+  // Ice
+  if(S.iceMode){
+    c.fillStyle='rgba(180,210,240,0.15)';
+    [[cx-100,cy-15,120,30],[cx+60,cy-20,90,40],[cx-200,cy-10,70,20]].forEach(([x,y,w,h])=>{
+      c.beginPath();c.ellipse(x,y,w/2,h/2,0,0,Math.PI*2);c.fill();
+    });
+  }
+
+  // Roundabout
+  if(S.roundabout){
+    const rb=S.roundabout;
+    c.beginPath();c.arc(rb.x,rb.y,rb.r+18,0,Math.PI*2);c.fillStyle='#2a2a2a';c.fill();
+    c.beginPath();c.arc(rb.x,rb.y,rb.r,0,Math.PI*2);c.fillStyle='#2a3a2a';c.fill();
+    c.setLineDash([7,5]);c.strokeStyle='rgba(255,255,255,0.22)';c.lineWidth=1.5;
+    c.beginPath();c.arc(rb.x,rb.y,rb.r+9,0,Math.PI*2);c.stroke();c.setLineDash([]);
+  }
+
+  // Pedestrians
+  S.peds?.forEach(p=>{
+    for(let i=-3;i<3;i++){
+      c.fillStyle=i%2===0?'rgba(255,255,255,0.8)':'rgba(0,0,0,0.2)';
+      c.fillRect(p.x-22,p.y-22+i*8,44,8);
+    }
+    c.font='18px serif';c.textAlign='center';
+    c.fillText(p.waiting?'🧍':'🚶',p.x,p.y+6);
+  });
+
+  // Traffic lights
+  S.lights?.forEach(l=>{
+    const cols={red:'#ef4444',yellow:'#f5c842',green:'#22c55e'};
+    c.fillStyle='#111';c.beginPath();
+    c.roundRect(l.x-9,l.y-32,18,34,3);c.fill();
+    ['red','yellow','green'].forEach((col,i)=>{
+      c.beginPath();c.arc(l.x,l.y-24+i*10,4.5,0,Math.PI*2);
+      const active=l.state===col;
+      c.fillStyle=active?cols[col]:'rgba(255,255,255,0.07)';
+      if(active){c.shadowColor=cols[col];c.shadowBlur=12;}
+      c.fill();c.shadowBlur=0;
+    });
+    c.fillStyle='#555';c.fillRect(l.x-2,l.y+2,4,20);
+  });
+
+  // Signs
+  S.signs?.forEach(sg=>{
+    c.font='20px serif';c.textAlign='center';c.fillText(sg.icon,sg.x,sg.y);
+    c.fillStyle='#777';c.fillRect(sg.x-1.5,sg.y,3,14);
+    const d=Math.hypot(car.x-sg.x,car.y-sg.y);
+    if(d<90){
+      c.beginPath();c.arc(sg.x,sg.y-8,16,0,Math.PI*2);
+      c.strokeStyle=`rgba(245,200,66,${0.7*(1-d/90)})`;c.lineWidth=2;c.stroke();
+    }
+  });
+
+  // UB Landmarks
+  S.ubLandmarks?.forEach(lm=>{
+    c.font='22px serif';c.textAlign='center';c.fillText(lm.icon,lm.x,lm.y);
+    c.font='bold 9px monospace';c.fillStyle='rgba(245,200,66,0.45)';
+    c.fillText(lm.label,lm.x,lm.y+16);
+  });
+
+  // Ambulance
+  if(S.ambulance?.active){
+    const a=S.ambulance;
+    c.save();c.translate(a.x,a.y+10);
+    c.font='24px serif';c.textAlign='center';c.fillText('🚑',0,0);
+    if(Math.floor(Date.now()/180)%2){c.beginPath();c.arc(0,-16,8,0,Math.PI*2);c.fillStyle='rgba(0,120,255,0.7)';c.fill();}
+    c.restore();
+  }
+
+  // Destination
+  const destPts={sc1:{x:cx+200,y:cy},sc2:{x:cx+200,y:cy},sc4:{x:cx+300,y:cy},sc5:{x:cx+200,y:cy},sc6:{x:cx+160,y:cy-80}};
+  const dest=destPts[S.id];
+  if(dest){
+    const pulse=0.5+0.5*Math.sin(Date.now()/280);
+    c.beginPath();c.arc(dest.x,dest.y,14+pulse*5,0,Math.PI*2);
+    c.strokeStyle=`rgba(34,197,94,${0.5+pulse*0.4})`;c.lineWidth=2.5;c.stroke();
+    c.font='16px serif';c.textAlign='center';c.fillText('🏁',dest.x,dest.y+5);
+  }
+
+  // Exhaust
+  S.particles?.forEach(p=>{
+    c.beginPath();c.arc(p.x,p.y,p.r*(p.life/p.max),0,Math.PI*2);
+    c.fillStyle=`rgba(180,180,180,${0.3*p.life/p.max})`;c.fill();
+  });
+
+  // Penalty flash
+  if(S._flash>0){
+    c.fillStyle=`rgba(239,68,68,${S._flash/20*0.2})`;
+    c.fillRect(-200,-200,simCW*3+400,simCH*3+400);
+    S._flash--;
+  }
+
+  // Traffic vehicles
+  drawTraffic(S, c, offX, offY);
+
+  c.restore(); // end camera
+
+  // Car (screen space)
+  const sx = S.ubMode ? car.x+offX : car.x;
+  const sy = S.ubMode ? car.y+offY : car.y;
+  drawSimCar({...car,x:sx,y:sy});
+
+  // UB mode overlays (fixed to screen)
+  if(S.ubMode){
+    // Location badge
+    c.fillStyle='rgba(10,10,16,0.7)';c.fillRect(0,0,simCW,28);
+    c.font='bold 11px monospace';c.fillStyle='rgba(245,200,66,0.8)';
+    c.textAlign='center';
+    c.fillText('🌆  УЛААНБААТАР — Энхтайваны өргөн чөлөө  |  Чөлөөт жолоодлого', simCW/2, 18);
+    // Compass
+    c.save();c.translate(simCW-44,simCH-44);
+    c.beginPath();c.arc(0,0,22,0,Math.PI*2);
+    c.fillStyle='rgba(10,10,16,0.8)';c.fill();
+    c.strokeStyle='rgba(255,255,255,0.12)';c.lineWidth=1;c.stroke();
+    [['Х',-Math.PI/2],['З',0],['Ө',Math.PI/2],['Д',Math.PI]].forEach(([d,a])=>{
+      c.font='bold 9px monospace';c.fillStyle='rgba(240,238,234,0.5)';c.textAlign='center';
+      c.fillText(d,Math.cos(a)*14,Math.sin(a)*14+3);
+    });
+    c.restore();
+  }
+
+  // Minimap (fixed)
+  const mmEl=document.getElementById('sim-minimap');
+  if(mmEl){
+    let cv=mmEl.querySelector('canvas');
+    if(!cv){cv=document.createElement('canvas');cv.width=90;cv.height=70;mmEl.appendChild(cv);}
+    const mc=cv.getContext('2d');
+    mc.fillStyle='#08080f';mc.fillRect(0,0,90,70);
+    const mW=S.ubMode?simCW*2.5:simCW, mH=S.ubMode?simCH*1.8:simCH;
+    S.roads?.forEach(r=>{
+      mc.fillStyle='#2a2a3a';
+      mc.fillRect(r.x/mW*90,r.y/mH*70,Math.max(r.w/mW*90,2),Math.max(r.h/mH*70,2));
+    });
+    mc.beginPath();mc.arc(car.x/mW*90,car.y/mH*70,3.5,0,Math.PI*2);
+    mc.fillStyle='#f5c842';mc.fill();
+    mc.beginPath();
+    mc.moveTo(car.x/mW*90,car.y/mH*70);
+    mc.lineTo(car.x/mW*90+Math.cos(car.angle)*8,car.y/mH*70+Math.sin(car.angle)*8);
+    mc.strokeStyle='#f5c842';mc.lineWidth=1.5;mc.stroke();
+  }
+}
+
+
+function drawSimCar(car) {
+  const c = simCtx;
+  c.save();
+  c.translate(car.x, car.y);
+  c.rotate(car.angle + Math.PI/2);
+  // shadow
+  c.fillStyle='rgba(0,0,0,0.3)';c.beginPath();c.ellipse(2,2,11,17,0,0,Math.PI*2);c.fill();
+  // body
+  c.fillStyle='#c0392b';c.beginPath();c.roundRect(-10,-17,20,34,4);c.fill();
+  // top gloss
+  c.fillStyle='rgba(255,255,255,0.06)';c.beginPath();c.roundRect(-9,-16,18,10,3);c.fill();
+  // windshield
+  c.fillStyle='rgba(100,170,255,0.65)';c.beginPath();c.roundRect(-7,-15,14,10,2);c.fill();
+  // roof
+  c.fillStyle='#a93226';c.beginPath();c.roundRect(-8,-8,16,16,3);c.fill();
+  // headlights
+  c.fillStyle='#f9ca24';c.shadowColor='#f9ca24';c.shadowBlur=8;
+  c.fillRect(-9,-17,5,4);c.fillRect(4,-17,5,4);c.shadowBlur=0;
+  // taillights
+  c.fillStyle='#ef4444';c.fillRect(-9,13,5,3);c.fillRect(4,13,5,3);
+  c.restore();
+}
+
+function drawPause() {
+  simDraw();
+  simCtx.fillStyle='rgba(10,10,16,0.65)';simCtx.fillRect(0,0,simCW,simCH);
+  simCtx.fillStyle='#f0eeea';simCtx.font='bold 26px "JetBrains Mono",monospace';
+  simCtx.textAlign='center';simCtx.fillText('⏸ ЗОГССОН',simCW/2,simCH/2-8);
+  simCtx.font='13px "JetBrains Mono",monospace';simCtx.fillStyle='rgba(240,238,234,0.4)';
+  simCtx.fillText('Space дарж үргэлжлүүлнэ',simCW/2,simCH/2+20);
+}
+
+function simDeduct(pts, msg) {
+  simState.score = Math.max(0, simState.score-pts);
+  simState.errors++;
+  simState._flash=22;
+  document.getElementById('sim-score-disp').textContent=simState.score;
+  const el=document.getElementById('hud-alert');
+  el.textContent=msg;el.style.display='block';
+  el.style.animation='none';void el.offsetWidth;el.style.animation='shake .3s ease';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2800);
+  simLog('⚠️ '+msg);
+}
+
+function showSimPopup(icon,name,rule) {
+  document.getElementById('popup-icon').textContent=icon;
+  document.getElementById('popup-name').textContent=name;
+  document.getElementById('popup-rule').textContent=rule;
+  const el=document.getElementById('sim-sign-popup');
+  el.style.display='block';el.style.animation='none';void el.offsetWidth;el.style.animation='popIn .25s ease';
+  simState.popTimer=180;
+}
+
+function simUpdateHUD() {
+  if(simState) document.getElementById('sim-score-disp').textContent=simState.score;
+}
+
+function showSimResult() {
+  const S=simState;
+  const overlay=document.getElementById('sim-result-overlay');
+  overlay.classList.add('show');
+  const pct=S.score;
+  let emoji,title,sub;
+  if(pct>=90){emoji='🏆';title='Маш сайн!';sub='Дасгалыг бараг алдаагүй дуусгалаа!';}
+  else if(pct>=70){emoji='👍';title='Сайн дүн!';sub='Бага зэрэг дадлага хийвэл төгс болно.';}
+  else{emoji='📚';title='Дахин дадлага хий';sub='Дүрмийг дахин үзэж дасгалаа давтаарай.';}
+  document.getElementById('sro-emoji').textContent=emoji;
+  document.getElementById('sro-title').textContent=title;
+  document.getElementById('sro-sub').textContent=sub;
+  document.getElementById('sro-score').textContent=pct;
+  document.getElementById('sro-score').style.color=pct>=80?'#22c55e':pct>=60?'#f5c842':'#ef4444';
+  document.getElementById('sro-errors').textContent=S.errors;
+  const m=String(Math.floor(S.elapsed/60)).padStart(2,'0'),s=String(S.elapsed%60).padStart(2,'0');
+  document.getElementById('sro-time').textContent=m+':'+s;
+  // save
+  const prog=JSON.parse(localStorage.getItem('sdu_sim')||'{}');
+  if(pct>=70) prog[S.id]=true;
+  localStorage.setItem('sdu_sim',JSON.stringify(prog));
+  simLog('🏁 Дуусгалаа! Оноо: '+pct);
+}
+
+function toggleSimPause() {
+  if (!simState?.running && !simPaused) return;
+  simPaused = !simPaused;
+  document.getElementById('sim-pause-btn').textContent = simPaused?'▶ Үргэлжлүүлэх':'⏸ Зогсоох';
+  if (!simPaused) runSimLoop();
+}
+
+function simRestart() {
+  if(simAnimId) cancelAnimationFrame(simAnimId);
+  if(simState?.timerRef) clearInterval(simState.timerRef);
+  simPaused=false;
+  document.getElementById('sim-pause-btn').textContent='⏸ Зогсоох';
+  document.getElementById('sim-result-overlay').classList.remove('show');
+  document.getElementById('hud-alert').style.display='none';
+  document.getElementById('sim-sign-popup').style.display='none';
+  if(curScenario) startScenario(curScenario.id);
+}
+
+function exitSim() {
+  if(simAnimId) cancelAnimationFrame(simAnimId);
+  if(simState?.timerRef) clearInterval(simState.timerRef);
+  simState=null; simPaused=false;
+  showSimulator();
+}
+
+function simLog(msg) {
+  const el=document.getElementById('sim-log');
+  if(el) el.textContent=msg;
+}
+
+// Patch hideAll to include simulator screens
+const _origHideAll = hideAll;
+hideAll = function() {
+  _origHideAll();
+  ['sim-scenario-screen','sim-screen'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+};
+
+// ── roundRect polyfill (Safari < 15.4) ──
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    if(r>w/2)r=w/2; if(r>h/2)r=h/2;
+    this.beginPath();
+    this.moveTo(x+r,y);
+    this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r);
+    this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r);
+    this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y);
+    this.closePath();
+    return this;
+  };
+}
+
+// ── Page transition ──
+function showPage(id, fn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.opacity='0';
+  el.style.display = fn || 'block';
+  requestAnimationFrame(()=>{ el.style.transition='opacity .18s'; el.style.opacity='1'; });
+}
+
+// ── Resize handler ──
+window.addEventListener('resize', () => {
+  if (simState?.running) initSimCanvas();
+});
+
+// ── Init ──
+window.addEventListener('load', () => {
+  const prog = JSON.parse(localStorage.getItem('sdu_quiz_history')||'[]');
+  document.getElementById('menu-done').textContent = prog.length;
+  // Animate stat numbers on menu
+  const nums = document.querySelectorAll('.stat-n');
+  nums.forEach(el => {
+    const target = parseInt(el.textContent);
+    if (isNaN(target) || target === 0) return;
+    let cur = 0;
+    const step = Math.ceil(target/30);
+    const t = setInterval(() => {
+      cur = Math.min(cur+step, target);
+      el.textContent = cur;
+      if (cur >= target) clearInterval(t);
+    }, 25);
+  });
+});
+</script>
+</body>
+</html>
