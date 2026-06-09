@@ -130,18 +130,23 @@ function renderQuestion() {
   // Show only the relevant image page: А (questions 1-10) or Б (questions 11-20)
   const isPageA = q.qNum <= 10;
   const imgSrc = isPageA ? q.imgA : q.imgB;
-  const imgId = `qi-${quizState.current}`;
+  const canvasId = `qi-${quizState.current}`;
   const pageLabel = isPageA ? 'А ХЭСЭГ' : 'Б ХЭСЭГ';
+
+  // Panel position within the 2×5 grid on the card page (localIdx 0-9)
+  const localIdx = isPageA ? q.qNum - 1 : q.qNum - 11;
+  const panelCol = localIdx % 2;
+  const panelRow = Math.floor(localIdx / 2);
 
   let imgHtml = '';
   if (q.isImageBased) {
     imgHtml = `
       <div class="q-images one-img">
-        <div style="position:relative;background:#07070e;min-height:100px;display:flex;align-items:center;justify-content:center;border-radius:3px 3px 0 0">
-          <img id="${imgId}" class="q-img" src="" onclick="zoomImg(this.src)"
-               alt="Карт ${q.cardNum} — ${pageLabel}"
-               style="max-height:54vh;opacity:0;transition:opacity .35s;cursor:zoom-in">
-          <div class="img-loading" id="load-${imgId}">⏳ Зураг ачааллаж байна...</div>
+        <div style="position:relative;background:#07070e;min-height:80px;display:flex;align-items:center;justify-content:center;border-radius:3px 3px 0 0;overflow:hidden">
+          <canvas id="${canvasId}"
+            style="max-width:100%;max-height:52vh;display:block;margin:0 auto;opacity:0;transition:opacity .35s;cursor:zoom-in"
+            title="Зургийг дарж томруулах"></canvas>
+          <div class="img-loading" id="load-${canvasId}">⏳ Зураг ачааллаж байна...</div>
         </div>
         <div class="q-img-hint">🔍 Зургийг дарж томруулах</div>
       </div>`;
@@ -197,13 +202,25 @@ function renderQuestion() {
 
   if (q.isImageBased) {
     requestAnimationFrame(() => {
-      const el = document.getElementById(imgId);
-      const load = document.getElementById('load-'+imgId);
-      if (el) {
-        el.onload = () => { if(load) load.style.display='none'; el.style.opacity='1'; };
-        el.onerror = null;
-        loadImgWithFallback(el, imgSrc);
-      }
+      const cv = document.getElementById(canvasId);
+      const load = document.getElementById('load-'+canvasId);
+      if (!cv) return;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const pw = img.width / 2;
+        const ph = img.height / 5;
+        cv.width  = pw;
+        cv.height = ph;
+        cv.getContext('2d').drawImage(img, panelCol*pw, panelRow*ph, pw, ph, 0, 0, pw, ph);
+        if (load) load.style.display = 'none';
+        cv.style.opacity = '1';
+        cv.onclick = () => zoomImg(imgSrc);
+      };
+      img.onerror = function() {
+        if (load) load.textContent = '⚠ Зураг ачааллаж чадсангүй';
+      };
+      img.src = imgSrc;
     });
   }
 }
