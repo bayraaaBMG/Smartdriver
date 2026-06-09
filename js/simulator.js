@@ -8,7 +8,7 @@ const SIM_SCENARIOS = [
   {id:'sc4',icon:'❄️',name:'Өвлийн мөстэй зам',desc:'Мөстэй замд гальмуурдах зай 5-10 дахин нэмэгдэнэ.',diff:'diff-med',diffLabel:'Дунд',task:'40 км/ц-ийн дотор байж аюулгүй нэвтэр',col:'#60a5fa'},
   {id:'sc5',icon:'🚑',name:'Яаралтай тусламж',desc:'Дуут дохиотой машин ирэхэд замаас зайл.',diff:'diff-hard',diffLabel:'Хэцүү',task:'Яаралтай тусламжид зам тав — баруун тийш зогс',col:'#f87171'},
   {id:'sc6',icon:'🔄',name:'Дугуй эргэлт',desc:'Дугуй эргэлтэнд зөв орж, зөв гарах дадлага.',diff:'diff-hard',diffLabel:'Хэцүү',task:'Дугуй эргэлтэнд орж дараагийн гарцаар гар',col:'#a78bfa'},
-  {id:'ub',icon:'🌆',name:'УБ Хотын Чөлөөт Жолоодлого',desc:'Энхтайваны өргөн чөлөө, Сүхбаатарын талбай, Их дэлгүүрийн уулзвар.',diff:'diff-easy',diffLabel:'Чөлөөт',task:'Улаанбаатарын хотын замаар чөлөөтэй жолоод',col:'#f5c842'},
+  {id:'ub',icon:'🌆',name:'УБ Хотын Чөлөөт Жолоодлого',desc:'Энхтайваны өргөн чөлөө, Сүхбаатарын талбай, Их дэлгүүрийн уулзвар.',diff:'diff-easy',diffLabel:'Чөлөөт',task:'Улаанбаатарын хотын замаар чөлөөтэй жолоод',col:'#ff6a00'},
 ];
 
 const simKeys = {};
@@ -242,7 +242,7 @@ function simUpdate() {
   const pct = Math.min(100, kmh/1.5);
   const fill = document.getElementById('hud-speed-fill');
   fill.style.width = pct+'%';
-  fill.style.background = kmh>70?'#ef4444':kmh>50?'#f5c842':'#22c55e';
+  fill.style.background = kmh>70?'#ef4444':kmh>50?'#ff6a00':'#22c55e';
   document.getElementById('hud-gear').textContent = kmh<5?'N':kmh<20?'1':kmh<40?'2':kmh<60?'3':kmh<80?'4':'5';
 
   if (ice && kmh>40 && !S._iceWarn) {
@@ -381,7 +381,7 @@ function simDraw() {
       else{c.fillRect(r.x-7,r.y,7,r.h);c.fillRect(r.x+r.w,r.y,7,r.h);}
     }
     if(S.ubMode&&r.name&&r.w>r.h&&r.w>200){
-      c.font='bold 10px monospace';c.fillStyle='rgba(245,200,66,0.35)';
+      c.font='bold 10px monospace';c.fillStyle='rgba(255,106,0,0.35)';
       c.textAlign='left';c.fillText(r.name,r.x+10,r.y+r.h/2+4);
     }
   });
@@ -411,7 +411,7 @@ function simDraw() {
   });
 
   S.lights?.forEach(l=>{
-    const cols={red:'#ef4444',yellow:'#f5c842',green:'#22c55e'};
+    const cols={red:'#ef4444',yellow:'#ff6a00',green:'#22c55e'};
     c.fillStyle='#111';c.beginPath();
     c.roundRect(l.x-9,l.y-32,18,34,3);c.fill();
     ['red','yellow','green'].forEach((col,i)=>{
@@ -430,13 +430,13 @@ function simDraw() {
     const d=Math.hypot(car.x-sg.x,car.y-sg.y);
     if(d<90){
       c.beginPath();c.arc(sg.x,sg.y-8,16,0,Math.PI*2);
-      c.strokeStyle=`rgba(245,200,66,${0.7*(1-d/90)})`;c.lineWidth=2;c.stroke();
+      c.strokeStyle=`rgba(255,106,0,${0.7*(1-d/90)})`;c.lineWidth=2;c.stroke();
     }
   });
 
   S.ubLandmarks?.forEach(lm=>{
     c.font='22px serif';c.textAlign='center';c.fillText(lm.icon,lm.x,lm.y);
-    c.font='bold 9px monospace';c.fillStyle='rgba(245,200,66,0.45)';
+    c.font='bold 9px monospace';c.fillStyle='rgba(255,106,0,0.45)';
     c.fillText(lm.label,lm.x,lm.y+16);
   });
 
@@ -477,7 +477,7 @@ function simDraw() {
 
   if(S.ubMode){
     c.fillStyle='rgba(10,10,16,0.7)';c.fillRect(0,0,simCW,28);
-    c.font='bold 11px monospace';c.fillStyle='rgba(245,200,66,0.8)';
+    c.font='bold 11px monospace';c.fillStyle='rgba(255,106,0,0.8)';
     c.textAlign='center';
     c.fillText('🌆  УЛААНБААТАР — Энхтайваны өргөн чөлөө  |  Чөлөөт жолоодлого', simCW/2, 18);
     c.save();c.translate(simCW-44,simCH-44);
@@ -503,11 +503,11 @@ function simDraw() {
       mc.fillRect(r.x/mW*90,r.y/mH*70,Math.max(r.w/mW*90,2),Math.max(r.h/mH*70,2));
     });
     mc.beginPath();mc.arc(car.x/mW*90,car.y/mH*70,3.5,0,Math.PI*2);
-    mc.fillStyle='#f5c842';mc.fill();
+    mc.fillStyle='#ff6a00';mc.fill();
     mc.beginPath();
     mc.moveTo(car.x/mW*90,car.y/mH*70);
     mc.lineTo(car.x/mW*90+Math.cos(car.angle)*8,car.y/mH*70+Math.sin(car.angle)*8);
-    mc.strokeStyle='#f5c842';mc.lineWidth=1.5;mc.stroke();
+    mc.strokeStyle='#ff6a00';mc.lineWidth=1.5;mc.stroke();
   }
 }
 
@@ -574,7 +574,7 @@ function showSimResult() {
   document.getElementById('sro-title').textContent=title;
   document.getElementById('sro-sub').textContent=sub;
   document.getElementById('sro-score').textContent=pct;
-  document.getElementById('sro-score').style.color=pct>=80?'#22c55e':pct>=60?'#f5c842':'#ef4444';
+  document.getElementById('sro-score').style.color=pct>=80?'#22c55e':pct>=60?'#ff6a00':'#ef4444';
   document.getElementById('sro-errors').textContent=S.errors;
   const m=String(Math.floor(S.elapsed/60)).padStart(2,'0'),s=String(S.elapsed%60).padStart(2,'0');
   document.getElementById('sro-time').textContent=m+':'+s;
