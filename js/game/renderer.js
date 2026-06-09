@@ -15,6 +15,7 @@ function render() {
   rBuildings(c);
   rRoads(c);
   rMarkings(c);
+  rBoxJunctions(c);
   rCrosswalks(c);
   rBusStops(c);
   rTrees(c);
@@ -174,7 +175,7 @@ function rBuildings(c) {
 var SW=14; // sidewalk width
 function rRoads(c) {
   // Sidewalks
-  c.fillStyle='#8a7d68';
+  c.fillStyle='#7a7060';
   wRoads.forEach(function(r) {
     if (r.horiz) {
       c.fillRect(r.x0,r.y0-SW,r.len,SW);
@@ -186,13 +187,13 @@ function rRoads(c) {
   });
 
   // Intersection boxes (asphalt)
-  c.fillStyle='#2c2924';
+  c.fillStyle='#1a1a1e';
   wInters.forEach(function(n) {
     c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
   });
 
   // Road surfaces
-  c.fillStyle='#2c2924';
+  c.fillStyle='#1e1e22';
   wRoads.forEach(function(r) {
     if (r.horiz) c.fillRect(r.x0,r.y0,r.len,r.h);
     else         c.fillRect(r.x0,r.y0,r.w,r.len);
@@ -244,6 +245,30 @@ function rMarkings(c) {
     c.beginPath(); c.moveTo(n.x+n.vw+so, n.y-n.hw); c.lineTo(n.x+n.vw+so, n.y+n.hw); c.stroke();
   });
 
+  // Lane direction arrows
+  c.fillStyle='rgba(255,255,255,0.20)';
+  wRoads.forEach(function(r) {
+    var D  = r.horiz ? r.h : r.w;
+    var lw = D / (r.lpd * 2);
+    for (var li=0; li<r.lpd*2; li++) {
+      if (li===r.lpd) continue;
+      var isPos = li >= r.lpd; // positive direction (east / south)
+      var laneCenter = (li+0.5)*lw;
+      var angle = r.horiz
+        ? (isPos ? 0 : Math.PI)
+        : (isPos ? Math.PI/2 : -Math.PI/2);
+      for (var ap=280; ap<r.len; ap+=480) {
+        if (r.horiz) {
+          var ax=r.x0+ap, ay=r.y0+laneCenter;
+          if (!_isInterArea(ax,ay)) _drawRoadArrow(c,ax,ay,angle);
+        } else {
+          var ax2=r.x0+laneCenter, ay2=r.y0+ap;
+          if (!_isInterArea(ax2,ay2)) _drawRoadArrow(c,ax2,ay2,angle);
+        }
+      }
+    }
+  });
+
   wRoads.forEach(function(r) {
     var D  = r.horiz ? r.h : r.w;
     var lw = D / (r.lpd * 2);
@@ -266,18 +291,58 @@ function rMarkings(c) {
 function _hLine(c,x,y,len){ c.beginPath();c.moveTo(x,y);c.lineTo(x+len,y);c.stroke(); }
 function _vLine(c,x,y,len){ c.beginPath();c.moveTo(x,y);c.lineTo(x,y+len);c.stroke(); }
 
+// ── Box Junction (yellow diagonal hash inside intersections) ──
+function rBoxJunctions(c) {
+  wInters.forEach(function(n) {
+    c.save();
+    c.beginPath();
+    c.rect(n.x-n.vw+1, n.y-n.hw+1, n.vw*2-2, n.hw*2-2);
+    c.clip();
+    c.strokeStyle='rgba(255,175,0,0.40)';
+    c.lineWidth=9; c.setLineDash([]);
+    var diag = Math.max(n.vw, n.hw)*3;
+    var step = 22;
+    // ↘ diagonals
+    for (var d=-diag; d<diag; d+=step) {
+      c.beginPath();
+      c.moveTo(n.x-n.vw+d, n.y-n.hw);
+      c.lineTo(n.x-n.vw+d+n.hw*2, n.y+n.hw);
+      c.stroke();
+    }
+    // ↙ diagonals
+    for (var d2=-diag; d2<diag; d2+=step) {
+      c.beginPath();
+      c.moveTo(n.x+n.vw-d2, n.y-n.hw);
+      c.lineTo(n.x+n.vw-d2-n.hw*2, n.y+n.hw);
+      c.stroke();
+    }
+    c.restore();
+  });
+}
+
+// ── Lane direction arrow ───────────────────────────────────────
+function _drawRoadArrow(c, x, y, angle) {
+  c.save(); c.translate(x,y); c.rotate(angle);
+  c.beginPath();
+  c.moveTo(10,0); c.lineTo(2,-5); c.lineTo(2,-2);
+  c.lineTo(-8,-2); c.lineTo(-8,2); c.lineTo(2,2);
+  c.lineTo(2,5); c.closePath(); c.fill();
+  c.restore();
+}
+
 // ── Crosswalks ────────────────────────────────────────────────
 function rCrosswalks(c) {
-  c.fillStyle='rgba(235,228,210,0.68)';
-  var stripe=6, gap=5, count=5;
+  var stripe=9, gap=6, count=5;
   wInters.forEach(function(n) {
     for (var i=0;i<count;i++) {
-      // N/S crosswalks: span vertical road width (vw), placed above/below horizontal road (hw)
-      c.fillRect(n.x-n.vw, n.y-n.hw-3-i*(stripe+gap), n.vw*2, stripe);
-      c.fillRect(n.x-n.vw, n.y+n.hw+3+i*(stripe+gap), n.vw*2, stripe);
-      // E/W crosswalks: span horizontal road height (hw), placed left/right of vertical road (vw)
-      c.fillRect(n.x-n.vw-3-i*(stripe+gap), n.y-n.hw, stripe, n.hw*2);
-      c.fillRect(n.x+n.vw+3+i*(stripe+gap), n.y-n.hw, stripe, n.hw*2);
+      var off3 = 3+i*(stripe+gap);
+      // N/S crosswalks (above/below horizontal road) — orange
+      c.fillStyle='rgba(255,165,0,0.88)';
+      c.fillRect(n.x-n.vw, n.y-n.hw-off3, n.vw*2, stripe);
+      c.fillRect(n.x-n.vw, n.y+n.hw+off3, n.vw*2, stripe);
+      // E/W crosswalks (left/right of vertical road) — orange
+      c.fillRect(n.x-n.vw-off3, n.y-n.hw, stripe, n.hw*2);
+      c.fillRect(n.x+n.vw+off3, n.y-n.hw, stripe, n.hw*2);
     }
   });
 }
