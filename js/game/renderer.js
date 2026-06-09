@@ -115,50 +115,16 @@ function render() {
   }
 }
 
-// ── Subtle road overlay (semi-transparent, shows game road positions) ─
+// ── Subtle road overlay — center lines only, low opacity ─────
 function rRoadOverlay(c) {
-  c.globalAlpha = 0.18;
+  c.globalAlpha = 0.22;
+  c.strokeStyle = 'rgba(255,220,0,0.9)';
+  c.lineWidth = 1.5;
+  c.setLineDash([]);
   wRoads.forEach(function(r) {
-    var p0 = _wToS(r.x0, r.y0);
-    var p1 = _wToS(r.x0 + (r.horiz ? r.len : r.w), r.y0 + (r.horiz ? r.h : r.len));
-    c.fillStyle = '#606068';
-    c.fillRect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
-  });
-  wInters.forEach(function(n) {
-    var p0 = _wToS(n.x-n.vw, n.y-n.hw);
-    var p1 = _wToS(n.x+n.vw, n.y+n.hw);
-    c.fillStyle = '#686870';
-    c.fillRect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
-  });
-
-  // Lane center lines
-  c.strokeStyle = 'rgba(255,230,20,0.50)'; c.lineWidth = 1.5; c.setLineDash([]);
-  wRoads.forEach(function(r) {
-    if (r.lpd < 3) {
-      var a = _wToS(r.horiz ? r.x0 : r.xCen, r.horiz ? r.yCen : r.y0);
-      var b = _wToS(r.horiz ? r.x0+r.len : r.xCen, r.horiz ? r.yCen : r.y0+r.len);
-      c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
-    }
-  });
-
-  // White dashed lane dividers
-  c.strokeStyle = 'rgba(255,255,240,0.42)'; c.lineWidth = 1.2; c.setLineDash([12*_pxWx, 8*_pxWx]);
-  wRoads.forEach(function(r) {
-    var D = r.horiz ? r.h : r.w;
-    var lw = D / (r.lpd * 2);
-    for (var i = 1; i < r.lpd*2; i++) {
-      if (i === r.lpd) continue;
-      var offset = lw * i;
-      var a, b;
-      if (r.horiz) {
-        a = _wToS(r.x0, r.y0 + offset);
-        b = _wToS(r.x0 + r.len, r.y0 + offset);
-      } else {
-        a = _wToS(r.x0 + offset, r.y0);
-        b = _wToS(r.x0 + offset, r.y0 + r.len);
-      }
-      c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
-    }
+    var a = _wToS(r.horiz ? r.x0 : r.xCen, r.horiz ? r.yCen : r.y0);
+    var b = _wToS(r.horiz ? r.x0+r.len : r.xCen, r.horiz ? r.yCen : r.y0+r.len);
+    c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
   });
   c.setLineDash([]);
   c.globalAlpha = 1;
@@ -275,11 +241,13 @@ function rPeds(c) {
 // ── Car drawing (all vehicle types) ──────────────────────────
 function _drawCar(c, car, bodyColor, darkColor, isPlayer) {
   var sp = _wToS(car.x, car.y);
-  var s = _pxWx; // scale factor
+  // Scale up so cars are clearly visible on satellite (real cars ~5px, game cars ~40px)
+  var s = Math.max(_pxWx * 2.5, 1.1);
   c.save();
   c.translate(sp[0], sp[1]);
-  c.scale(s, s); // uniform scale — world units below
-  c.rotate(car.angle);
+  c.scale(s, s);
+  // +PI/2 so bh (long dim) aligns with travel direction (angle=0 = east)
+  c.rotate(car.angle + Math.PI / 2);
 
   var bw = car.w, bh = car.h;
   var vtype = car.vtype || 'sedan';
@@ -417,14 +385,12 @@ function rPolice(c) {
   G.police.forEach(function(pc) {
     _drawCar(c, pc, '#1d4ed8', '#163ba8', false);
 
+    // Screen-space label above police car
     var sp0 = _wToS(pc.x, pc.y);
-    c.save();
-    c.translate(sp0[0], sp0[1]);
-    c.scale(_pxWx, _pxWy);
-    c.rotate(pc.angle);
-    c.fillStyle='rgba(255,255,255,0.52)'; c.fillRect(-10,-4,20,8);
-    c.fillStyle='#fff'; c.font='bold 5px monospace'; c.textAlign='center';
-    c.fillText('ЦАГДАА',0,2);
+    c.save(); c.translate(sp0[0], sp0[1]);
+    c.fillStyle='rgba(30,60,200,0.82)'; c.fillRect(-22,-38,44,14);
+    c.fillStyle='#fff'; c.font='bold 9px "JetBrains Mono",monospace'; c.textAlign='center';
+    c.fillText('ЦАГДАА', 0, -27);
     c.restore();
 
     if (pc.sirenOn) {
@@ -455,62 +421,61 @@ function rPolice(c) {
   });
 }
 
-// ── Player Car ────────────────────────────────────────────────
+// ── Player — GPS navigation arrow (always visible on satellite) ──
 function rPlayer(c) {
   var p = G.player;
   if (p.crashed && G.frame%8 < 4) return;
 
-  _drawCar(c, p, '#ff6a00', '#c84c00', true);
+  var sp = _wToS(p.x, p.y);
+  var arr = 26; // arrow half-size in screen pixels
 
-  // Headlights glow
-  if (p.speed > 0.3) {
-    var fOff = 20;
-    var hx1 = p.x + Math.cos(p.angle)*fOff - Math.sin(p.angle)*5;
-    var hy1 = p.y + Math.sin(p.angle)*fOff + Math.cos(p.angle)*5;
-    var hx2 = p.x + Math.cos(p.angle)*fOff + Math.sin(p.angle)*5;
-    var hy2 = p.y + Math.sin(p.angle)*fOff - Math.cos(p.angle)*5;
-    var sp1=_wToS(hx1,hy1), sp2=_wToS(hx2,hy2);
-    c.shadowColor='#ffffaa'; c.shadowBlur=20;
-    c.fillStyle='rgba(255,255,200,0.95)';
-    c.beginPath();c.arc(sp1[0],sp1[1],3*_pxWx,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(sp2[0],sp2[1],3*_pxWx,0,Math.PI*2);c.fill();
-    c.shadowBlur=0;
-  }
+  c.save();
+  c.translate(sp[0], sp[1]);
+  // Rotate so arrow nose points in travel direction (angle=0 = east)
+  c.rotate(p.angle + Math.PI / 2);
 
-  // Brake lights
-  if (p.braking || p.crashed) {
-    var rOff = 20;
-    var rx1 = p.x - Math.cos(p.angle)*rOff - Math.sin(p.angle)*5;
-    var ry1 = p.y - Math.sin(p.angle)*rOff + Math.cos(p.angle)*5;
-    var rx2 = p.x - Math.cos(p.angle)*rOff + Math.sin(p.angle)*5;
-    var ry2 = p.y - Math.sin(p.angle)*rOff - Math.cos(p.angle)*5;
-    var brsp1=_wToS(rx1,ry1), brsp2=_wToS(rx2,ry2);
-    c.shadowColor='#ef4444'; c.shadowBlur=20;
-    c.fillStyle='rgba(239,68,68,0.95)';
-    c.beginPath();c.arc(brsp1[0],brsp1[1],3.5*_pxWx,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(brsp2[0],brsp2[1],3.5*_pxWx,0,Math.PI*2);c.fill();
-    c.shadowBlur=0;
-  }
+  // Pulsing accuracy ring
+  var pulse = arr * 1.6 + Math.sin(G.frame * 0.09) * 5;
+  c.beginPath(); c.arc(0, 0, pulse, 0, Math.PI*2);
+  c.strokeStyle = 'rgba(255,106,0,0.28)'; c.lineWidth = 3; c.stroke();
 
-  // Horn
+  // Outer white glow ring
+  c.beginPath(); c.arc(0, 0, arr * 0.65, 0, Math.PI*2);
+  c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 4; c.stroke();
+
+  // Glow
+  c.shadowColor = '#ff6a00'; c.shadowBlur = 18;
+
+  // Navigation arrow (nose at local -y = travel direction)
+  c.fillStyle = p.braking ? '#ef4444' : (p.crashed ? '#fbbf24' : '#ff6a00');
+  c.strokeStyle = '#ffffff'; c.lineWidth = 2.5;
+  c.beginPath();
+  c.moveTo(0, -arr);              // nose (forward)
+  c.lineTo(arr * 0.55, arr * 0.6); // right back
+  c.lineTo(0, arr * 0.22);        // back indent
+  c.lineTo(-arr * 0.55, arr * 0.6);// left back
+  c.closePath();
+  c.fill(); c.stroke();
+
+  c.shadowBlur = 0;
+  c.restore();
+
+  // Horn bubble (screen-space)
   if (p.horn) {
-    var hsp = _wToS(p.x, p.y);
-    c.save(); c.translate(hsp[0], hsp[1]);
-    c.font = (12*_pxWx)+'px serif'; c.textAlign='center';
-    c.globalAlpha = 0.8+Math.sin(G.frame*0.4)*0.2;
-    c.fillText('📯', 0, -p.h*_pxWy/2-12*_pxWy);
-    c.globalAlpha=1; c.restore();
+    c.font = '18px serif'; c.textAlign='center';
+    c.globalAlpha = 0.85 + Math.sin(G.frame*0.4)*0.15;
+    c.fillText('📯', sp[0], sp[1] - arr - 16);
+    c.globalAlpha = 1;
   }
 
-  // Health bar above car
+  // Health bar (screen-space, above arrow)
   if (p.health < 100) {
-    var hbSp = _wToS(p.x, p.y - p.h/2 - 12);
-    var barW = 30*_pxWx;
-    c.save(); c.translate(hbSp[0]-barW/2, hbSp[1]-3*_pxWy);
-    c.fillStyle='rgba(0,0,0,0.55)'; c.fillRect(0,0,barW,6*_pxWy);
-    var hCol = p.health>60?'#22c55e':p.health>30?'#f59e0b':'#ef4444';
-    c.fillStyle=hCol; c.fillRect(0,0,barW*p.health/100,6*_pxWy);
-    c.restore();
+    var barW = 56, barH = 6;
+    var bx = sp[0] - barW/2, by = sp[1] - arr - 34;
+    c.fillStyle = 'rgba(0,0,0,0.65)'; c.fillRect(bx, by, barW, barH);
+    var hCol = p.health>60 ? '#22c55e' : p.health>30 ? '#f59e0b' : '#ef4444';
+    c.fillStyle = hCol; c.fillRect(bx, by, barW * p.health/100, barH);
+    c.strokeStyle='rgba(255,255,255,0.2)'; c.lineWidth=0.8; c.strokeRect(bx,by,barW,barH);
   }
 }
 
