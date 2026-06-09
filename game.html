@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>SmartDriver UB — Open World</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0f;font-family:'JetBrains Mono',monospace}
+#game-canvas{display:block;position:fixed;top:0;left:0;z-index:0}
+
+/* ── MENU ── */
+#game-menu{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#0a0a0f 60%,#120a18)}
+.gm-logo{font-family:Raleway,sans-serif;font-weight:900;font-size:3rem;letter-spacing:.05em;background:linear-gradient(90deg,#ff6a00,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.3rem}
+.gm-sub{color:rgba(240,238,234,.4);font-size:.75rem;letter-spacing:.18em;margin-bottom:2.5rem}
+.gm-modes{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;max-width:600px;width:90%}
+.gm-btn{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.4rem 1.2rem;cursor:pointer;transition:.2s;text-align:left;color:#f0eeea}
+.gm-btn:hover{border-color:#ff6a00;background:rgba(255,106,0,.06);transform:translateY(-2px)}
+.gm-btn-icon{font-size:2rem;margin-bottom:.6rem}
+.gm-btn-title{font-family:Raleway,sans-serif;font-weight:700;font-size:1rem;margin-bottom:.3rem}
+.gm-btn-desc{font-size:.68rem;color:rgba(240,238,234,.4);line-height:1.5}
+.gm-back{margin-top:1.5rem;color:rgba(240,238,234,.3);font-size:.75rem;cursor:pointer;text-decoration:underline}
+.gm-back:hover{color:#ff6a00}
+
+/* ── HUD ── */
+#game-hud{position:fixed;top:0;left:0;right:0;z-index:50;display:none;pointer-events:none}
+.hud-topbar{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:linear-gradient(to bottom,rgba(6,6,12,.92),transparent)}
+.hud-badge{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.3rem .7rem;font-size:.75rem}
+.hud-money{color:#22c55e;font-weight:700}
+.hud-time{color:rgba(240,238,234,.6)}
+.hud-mode{color:#ff6a00;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.hud-limit{display:flex;align-items:center;gap:.3rem}
+.hud-limit-sign{width:28px;height:28px;border-radius:50%;border:3px solid #ef4444;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#f0eeea;background:rgba(239,68,68,.08)}
+#hud-wanted{display:flex;gap:3px;align-items:center}
+.star{font-size:.8rem;filter:grayscale(1);opacity:.3;transition:.3s}
+.star.lit{filter:none;opacity:1}
+
+/* Speed */
+#hud-speed-wrap{position:fixed;bottom:80px;right:20px;z-index:50;pointer-events:none;display:none}
+.spd-circle{width:100px;height:100px;border-radius:50%;background:rgba(10,10,16,.88);border:2px solid rgba(255,106,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.spd-num{font-size:1.8rem;font-weight:700;color:#f0eeea;line-height:1}
+.spd-unit{font-size:.55rem;color:rgba(240,238,234,.4);letter-spacing:.1em}
+.spd-gear{font-size:.65rem;color:#ff6a00;margin-top:2px}
+
+/* Minimap */
+#game-minimap{position:fixed;top:56px;left:12px;z-index:50;pointer-events:none;display:none}
+.mm-frame{width:140px;height:108px;background:rgba(6,6,12,.85);border:1px solid rgba(255,106,0,.25);border-radius:6px;overflow:hidden}
+
+/* Alerts */
+#game-alert{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:80;pointer-events:none;text-align:center}
+.g-alert-box{background:rgba(10,10,16,.92);border:1px solid #ef4444;border-radius:12px;padding:1rem 1.8rem;animation:alertPop .3s ease;display:none}
+.g-alert-title{font-family:Raleway,sans-serif;font-weight:900;font-size:1.1rem;color:#ef4444}
+.g-alert-sub{font-size:.8rem;color:rgba(240,238,234,.6);margin-top:.3rem}
+@keyframes alertPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Police dialog */
+#game-police-dialog{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+.gpd-box{background:#0d0d16;border:1px solid rgba(255,106,0,.3);border-radius:16px;padding:2rem;max-width:380px;text-align:center}
+.gpd-icon{font-size:3rem;margin-bottom:1rem}
+.gpd-title{font-family:Raleway,sans-serif;font-weight:900;font-size:1.3rem;color:#f0eeea;margin-bottom:.5rem}
+.gpd-sub{color:rgba(240,238,234,.5);font-size:.8rem;line-height:1.6;margin-bottom:1.2rem}
+.gpd-fine-row{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.8rem;margin-bottom:1.2rem}
+.gpd-fine-label{font-size:.7rem;color:rgba(240,238,234,.4);margin-bottom:.2rem}
+#gpd-fine{font-family:Raleway,sans-serif;font-weight:900;font-size:1.6rem;color:#ef4444}
+.gpd-btns{display:flex;gap:.8rem;justify-content:center}
+.gpd-btn{background:linear-gradient(90deg,#ff6a00,#ff9500);border:none;border-radius:8px;padding:.7rem 1.5rem;color:#fff;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;font-size:.8rem}
+.gpd-btn.secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+
+/* Pause */
+#game-pause{position:fixed;inset:0;z-index:85;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65)}
+.gp-box{background:#0d0d16;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:2rem;text-align:center;min-width:280px}
+.gp-title{font-family:Raleway,sans-serif;font-weight:900;font-size:1.4rem;color:#f0eeea;margin-bottom:1.5rem}
+.gp-btn{display:block;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.8rem;color:#f0eeea;font-family:'JetBrains Mono',monospace;font-size:.85rem;cursor:pointer;margin-bottom:.6rem;transition:.2s}
+.gp-btn:hover{border-color:#ff6a00;color:#ff6a00}
+.gp-btn.danger{border-color:rgba(239,68,68,.3);color:#ef4444}
+
+/* Violation log */
+#viol-log{position:fixed;bottom:80px;left:12px;z-index:50;pointer-events:none;display:none;max-width:260px}
+.vl-item{background:rgba(10,10,16,.85);border-left:3px solid #ef4444;border-radius:0 6px 6px 0;padding:.4rem .7rem;margin-bottom:.3rem;font-size:.68rem;color:rgba(240,238,234,.7);animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+
+/* Mode HUD */
+#hud-task{position:fixed;top:56px;right:12px;z-index:50;display:none;pointer-events:none}
+.ht-box{background:rgba(6,6,12,.88);border:1px solid rgba(255,106,0,.2);border-radius:8px;padding:.6rem .9rem;max-width:220px}
+.ht-label{font-size:.6rem;color:#ff6a00;letter-spacing:.1em;margin-bottom:.2rem}
+.ht-text{font-size:.75rem;color:#f0eeea;line-height:1.4}
+
+/* Mobile buttons */
+#mob-game-ctrl{position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;padding:.5rem;background:rgba(6,6,12,.7);border-top:1px solid rgba(255,255,255,.06)}
+.mgc-row{display:flex;justify-content:center;gap:.4rem;margin-bottom:.3rem}
+.mgc-btn{width:52px;height:52px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;font-size:1.2rem;color:#f0eeea;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.mgc-btn:active,.mgc-btn.pressed{background:rgba(255,106,0,.3);border-color:#ff6a00}
+</style>
+</head>
+<body>
+<canvas id="game-canvas"></canvas>
+
+<!-- MENU -->
+<div id="game-menu">
+  <div class="gm-logo">SMARTDRIVER</div>
+  <div class="gm-sub">// УЛААНБААТАР ХОТЫН ЖОЛООДЛОГЫН SIMULATOR</div>
+  <div class="gm-modes">
+    <div class="gm-btn" onclick="startGame('free')">
+      <div class="gm-btn-icon">🚗</div>
+      <div class="gm-btn-title">Чөлөөт Жолоодлого</div>
+      <div class="gm-btn-desc">Хот дотор чөлөөтэй явна. Дүрэм зөрчвөл цагдаа дагана.</div>
+    </div>
+    <div class="gm-btn" onclick="startGame('test')">
+      <div class="gm-btn-icon">📋</div>
+      <div class="gm-btn-title">Дүрмийн Шалгалт</div>
+      <div class="gm-btn-desc">Бодит нөхцөл дээр дүрмийн дагуу явж, оноо цуглуул.</div>
+    </div>
+    <div class="gm-btn" onclick="startGame('mission')">
+      <div class="gm-btn-icon">🎯</div>
+      <div class="gm-btn-title">Даалгавар</div>
+      <div class="gm-btn-desc">Тодорхой газар хүрэх, зорчигч авах, гэх мэт даалгавар.</div>
+    </div>
+    <div class="gm-btn" onclick="window.location.href='index.html'">
+      <div class="gm-btn-icon">📚</div>
+      <div class="gm-btn-title">Дүрмийн Тест рүү</div>
+      <div class="gm-btn-desc">SmartDriver quiz, карт сонгох, шалгалтын горим руу буцах.</div>
+    </div>
+  </div>
+  <div class="gm-back" onclick="window.location.href='index.html'">← Үндсэн цэс рүү буцах</div>
+</div>
+
+<!-- HUD -->
+<div id="game-hud">
+  <div class="hud-topbar">
+    <div class="hud-badge hud-mode" id="hud-mode-lbl">ЧӨЛӨӨТ</div>
+    <div class="hud-badge hud-money" id="hud-money">₮500,000</div>
+    <div class="hud-badge hud-time" id="hud-time">08:00</div>
+    <div class="hud-badge">
+      <div class="hud-limit"><div class="hud-limit-sign" id="hud-spd-limit">60</div></div>
+    </div>
+    <div class="hud-badge" id="hud-wanted">
+      <span class="star" id="s1">⭐</span>
+      <span class="star" id="s2">⭐</span>
+      <span class="star" id="s3">⭐</span>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hud-badge" style="cursor:pointer" onclick="togglePause()">⏸ ESC</div>
+  </div>
+</div>
+<div id="hud-speed-wrap">
+  <div class="spd-circle">
+    <div class="spd-num" id="hud-spd">0</div>
+    <div class="spd-unit">КМ/ЦАГ</div>
+    <div class="spd-gear" id="hud-gear">N</div>
+  </div>
+</div>
+<div id="game-minimap"><div class="mm-frame"><canvas id="mm-canvas" width="140" height="108"></canvas></div></div>
+<div id="viol-log"></div>
+<div id="hud-task"><div class="ht-box"><div class="ht-label">ДААЛГАВАР</div><div class="ht-text" id="ht-text">—</div></div></div>
+
+<!-- Alert -->
+<div id="game-alert">
+  <div class="g-alert-box" id="alert-box">
+    <div class="g-alert-title" id="alert-title">⚠️ Зөрчил</div>
+    <div class="g-alert-sub" id="alert-sub">—</div>
+  </div>
+</div>
+
+<!-- Police dialog -->
+<div id="game-police-dialog">
+  <div class="gpd-box">
+    <div class="gpd-icon">👮</div>
+    <div class="gpd-title">Замын цагдаа таныг зогсоолоо</div>
+    <div class="gpd-sub">Та замын хөдөлгөөний дүрэм зөрчсөн байна. Дараах торгуулийг төлнө үү.</div>
+    <div class="gpd-fine-row">
+      <div class="gpd-fine-label">НИЙТ ТОРГУУЛЬ</div>
+      <div id="gpd-fine">₮0</div>
+    </div>
+    <div class="gpd-btns">
+      <button class="gpd-btn" onclick="payFine()">💳 Төлөх</button>
+      <button class="gpd-btn secondary" onclick="dismissPolice()">✕ Хаах</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pause -->
+<div id="game-pause">
+  <div class="gp-box">
+    <div class="gp-title">⏸ Зогссон</div>
+    <button class="gp-btn" onclick="togglePause()">▶ Үргэлжлүүлэх</button>
+    <button class="gp-btn" onclick="restartGame()">🔄 Дахин эхлэх</button>
+    <button class="gp-btn" onclick="showGameMenu()">🏠 Цэс рүү</button>
+    <button class="gp-btn danger" onclick="window.location.href='index.html'">← Quiz руу буцах</button>
+  </div>
+</div>
+
+<!-- Mobile controls -->
+<div id="mob-game-ctrl">
+  <div class="mgc-row">
+    <div style="width:52px"></div>
+    <button class="mgc-btn" id="mb-up"   ontouchstart="gKeys['ArrowUp']=true"   ontouchend="gKeys['ArrowUp']=false">▲</button>
+    <div style="width:52px"></div>
+    <div style="width:20px"></div>
+    <button class="mgc-btn" id="mb-horn" ontouchstart="gKeys['h']=true" ontouchend="gKeys['h']=false">📯</button>
+  </div>
+  <div class="mgc-row">
+    <button class="mgc-btn" id="mb-lt"   ontouchstart="gKeys['ArrowLeft']=true"  ontouchend="gKeys['ArrowLeft']=false">◀</button>
+    <button class="mgc-btn" id="mb-dn"   ontouchstart="gKeys['ArrowDown']=true"  ontouchend="gKeys['ArrowDown']=false">▼</button>
+    <button class="mgc-btn" id="mb-rt"   ontouchstart="gKeys['ArrowRight']=true" ontouchend="gKeys['ArrowRight']=false">▶</button>
+    <div style="width:20px"></div>
+    <button class="mgc-btn" id="mb-pause" onclick="togglePause()">⏸</button>
+  </div>
+</div>
+
+<script src="js/ub-game.js"></script>
+</body>
+</html>
