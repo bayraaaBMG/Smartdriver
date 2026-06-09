@@ -62,6 +62,19 @@ var LANDMARKS = [
   [600, 1200, 110, 80, '#685e60', '#786e70', 'Тэнгис Кино Театр', 'pub'],
 ];
 
+// ── Зогсоол (Parking Lots) ────────────────────────────────────
+// {x,y,w,h,cols,rows} — all are horizontal parking bays
+var wParkingLots = [
+  {x:580,  y:1805, w:185, h:78, cols:5, rows:3},  // Peace Ave south, west
+  {x:2080, y:1805, w:165, h:78, cols:4, rows:3},  // Peace Ave south, mid
+  {x:3100, y:1805, w:160, h:78, cols:4, rows:3},  // Peace Ave south, east
+  {x:595,  y:1498, w:175, h:66, cols:5, rows:2},  // Peace Ave north
+  {x:2810, y:1650, w:135, h:78, cols:3, rows:3},  // near UB Hotel
+  {x:3395, y:638,  w:148, h:84, cols:4, rows:3},  // Shangri-La
+  {x:620,  y:608,  w:155, h:80, cols:4, rows:3},  // Baga Toiruu north
+  {x:2110, y:608,  w:140, h:75, cols:4, rows:3},  // Baga Toiruu mid
+];
+
 // ── Автобусны буудал ──────────────────────────────────────────
 var BUS_STOPS = [];
 (function() {
@@ -118,10 +131,16 @@ function _genBuildings() {
   ys.sort((a,b)=>a-b);
 
   var cols = [
-    '#7a6e62','#8a7e72','#6e6460','#7a7868','#8a8878',
-    '#6e6c60','#68706a','#7a6468','#8a7c70','#6a6864',
-    '#7c7060','#6a7870','#746468','#807870','#6c7c72',
-    '#887268','#706878','#788068','#6a6c78','#827068',
+    // cream / light facades common in UB
+    '#d8d0c0','#d0c8b8','#ccc4b4','#c8bfb0','#d4ccba',
+    // beige / sand stone
+    '#b8ae9e','#b0a896','#bab29e','#b4ac9a','#bcb4a4',
+    // medium warm
+    '#9a9080','#92887a','#9e9484','#948c7c','#a09688',
+    // cool gray-blue (Soviet-era concrete)
+    '#8a8c98','#848690','#90929e','#888a96','#8c8e9a',
+    // darker tones
+    '#7a7060','#6e6c62','#787068','#726a62','#7c746c',
   ];
 
   var bid = 0;
