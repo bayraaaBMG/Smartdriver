@@ -10,15 +10,15 @@ var PlayerCar = (function() {
     this.angle = angle;
     this.speed = 0;
 
-    // Physics
-    this.maxSpeed   = 10.2;   // ~190 km/h max
-    this.maxReverse = 3.8;
-    this.accel      = 0.21;
-    this.brakeForce = 0.38;
-    this.engBrake   = 0.045;  // engine friction
-    this.steerHi    = 0.068;  // steering at low speed
-    this.steerLo    = 0.018;  // minimum steering at high speed
-    this.steerFade  = 0.032;  // reduction per speed unit
+    // Physics — simulator feel (heavier acceleration, gradual steering fade)
+    this.maxSpeed   = 8.5;    // ~160 km/h max
+    this.maxReverse = 3.2;
+    this.accel      = 0.13;
+    this.brakeForce = 0.25;
+    this.engBrake   = 0.038;  // engine friction
+    this.steerHi    = 0.055;  // steering at low speed
+    this.steerLo    = 0.014;  // minimum steering at high speed
+    this.steerFade  = 0.022;  // reduction per speed unit
 
     // Car size
     this.w = 22; this.h = 38;

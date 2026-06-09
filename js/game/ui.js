@@ -38,7 +38,7 @@ function drawAlerts(c) {
 // ── Minimap ───────────────────────────────────────────────────
 function drawMinimap() {
   if (!mmCtx) return;
-  var mc=mmCtx, mw=140, mh=108;
+  var mc=mmCtx, mw=mmCanvas.width, mh=mmCanvas.height;
   var sx=mw/WORLD.W, sy=mh/WORLD.H;
 
   mc.fillStyle='#1a1810'; mc.fillRect(0,0,mw,mh);
@@ -155,7 +155,7 @@ function drawSpeedometer(kmh, limit) {
     if(_spdCanvas) _spdCtx=_spdCanvas.getContext('2d');
   }
   if (!_spdCtx) return;
-  var c=_spdCtx, size=100;
+  var c=_spdCtx, size=_spdCanvas.width;
   c.clearRect(0,0,size,size);
   var cx=size/2, cy=size/2, r=42;
 
@@ -229,6 +229,7 @@ function startGame(mode) {
   // Show/hide UI elements
   $('game-menu').style.display='none';
   $('game-hud').style.display='block';
+  $('hud-health').style.display='block';
   $('hud-speed-wrap').style.display='block';
   $('game-minimap').style.display='block';
   $('viol-log').style.display='block';
@@ -265,6 +266,7 @@ function showGameMenu() {
   cancelAnimationFrame(_raf);
   $('game-menu').style.display='flex';
   $('game-hud').style.display='none';
+  $('hud-health').style.display='none';
   $('hud-speed-wrap').style.display='none';
   $('game-minimap').style.display='none';
   $('viol-log').style.display='none';

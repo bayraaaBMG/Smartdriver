@@ -220,14 +220,6 @@ function _doArrest() {
   }, 700);
 }
 
-// Called from ui.js pay button
-function payFineAction() {
-  closePoliceDialog();
-  G.player.crashed=false; G.player.crashTimer=0;
-  G._pendingFine=0;
-  pushAlert('✅ Торгууль төлөгдлөө', 'Аюулгүй явна уу!', '#22c55e');
-}
-
 // Wanted level decay (call each frame)
 function updateWantedDecay() {
   if (G.wantedLevel<=0) return;

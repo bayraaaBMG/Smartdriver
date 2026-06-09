@@ -76,9 +76,13 @@ function rSpecialAreas(c) {
   c.fillStyle='rgba(255,255,255,0.3)';
   c.beginPath(); c.arc(fx-3,fy-3,4,0,Math.PI*2); c.fill();
 
-  // Square name label
-  c.font='bold 12px monospace'; c.fillStyle='rgba(255,255,255,0.22)'; c.textAlign='center';
-  c.fillText(sq.name, sq.x+sq.w/2, sq.y+22);
+  // Square name label — clearly visible
+  c.font='bold 13px "JetBrains Mono",monospace';
+  c.fillStyle='rgba(255,255,255,0.55)'; c.textAlign='center';
+  c.fillText('★ '+sq.name+' ★', sq.x+sq.w/2, sq.y+sq.h/2-6);
+  c.font='9px "JetBrains Mono",monospace';
+  c.fillStyle='rgba(255,255,255,0.28)';
+  c.fillText('Улаанбаатар хотын зүрх', sq.x+sq.w/2, sq.y+sq.h/2+10);
 
   // Park landmark (green area)
   LANDMARKS.forEach(function(lm) {
@@ -214,10 +218,18 @@ function rMarkings(c) {
     }
     c.setLineDash([]);
 
-    // Road name (faint)
-    if (r.horiz && r.len>500) {
-      c.font='bold 8px monospace'; c.fillStyle='rgba(255,255,255,0.09)'; c.textAlign='left';
-      c.fillText(r.name, r.x0+18, r.yCen+3);
+    // Road name — repeated every 600px so always visible
+    if (r.len>400) {
+      c.font='bold 8px "JetBrains Mono",monospace';
+      c.fillStyle='rgba(255,255,255,0.28)'; c.textAlign='center';
+      for (var rpos=300; rpos<r.len; rpos+=620) {
+        if (r.horiz) {
+          c.fillText(r.name, r.x0+rpos, r.yCen+4);
+        } else {
+          c.save(); c.translate(r.xCen+4, r.y0+rpos);
+          c.rotate(Math.PI/2); c.fillText(r.name, 0, 0); c.restore();
+        }
+      }
     }
   });
 }
@@ -231,10 +243,12 @@ function rCrosswalks(c) {
   var stripe=6, gap=5, count=5;
   wInters.forEach(function(n) {
     for (var i=0;i<count;i++) {
+      // N/S crosswalks: span vertical road width (vw), placed above/below horizontal road (hw)
       c.fillRect(n.x-n.vw, n.y-n.hw-3-i*(stripe+gap), n.vw*2, stripe);
       c.fillRect(n.x-n.vw, n.y+n.hw+3+i*(stripe+gap), n.vw*2, stripe);
-      c.fillRect(n.x-n.hw-3-i*(stripe+gap), n.y-n.vw, stripe, n.vw*2);
-      c.fillRect(n.x+n.hw+3+i*(stripe+gap), n.y-n.vw, stripe, n.vw*2);
+      // E/W crosswalks: span horizontal road height (hw), placed left/right of vertical road (vw)
+      c.fillRect(n.x-n.vw-3-i*(stripe+gap), n.y-n.hw, stripe, n.hw*2);
+      c.fillRect(n.x+n.vw+3+i*(stripe+gap), n.y-n.hw, stripe, n.hw*2);
     }
   });
 }
