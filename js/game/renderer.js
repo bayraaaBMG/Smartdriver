@@ -407,17 +407,23 @@ function _drawCar(c, car, bodyColor, darkColor, isPlayer) {
   c.fillStyle='rgba(0,0,0,0.32)';
   c.fillRect(-bw/2+5,-bh/2+7,bw,bh);
 
-  // Wheels — 4 dark rectangles at corners (drawn before body)
-  var ww=5, wh=7;
-  c.fillStyle='#1a1a1a';
-  c.fillRect(-bw/2-1,      -bh/2+3,      ww, wh); // front-left
-  c.fillRect( bw/2-ww+1,   -bh/2+3,      ww, wh); // front-right
-  c.fillRect(-bw/2-1,       bh/2-wh-3,   ww, wh); // rear-left
-  c.fillRect( bw/2-ww+1,    bh/2-wh-3,   ww, wh); // rear-right
-  // Wheel highlight (shine)
-  c.fillStyle='rgba(255,255,255,0.09)';
-  c.fillRect(-bw/2-1, -bh/2+3, 2, wh);
-  c.fillRect( bw/2-1, -bh/2+3, 2, wh);
+  // Wheels — oval (tyre) with bright rim centre
+  var wxo=bw/2+1.5, wyf=-bh/2+7, wyr=bh/2-7, wra=3.5, wrb=4.8;
+  c.fillStyle='#111';
+  c.beginPath(); c.ellipse(-wxo, wyf, wra, wrb, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( wxo, wyf, wra, wrb, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(-wxo, wyr, wra, wrb, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( wxo, wyr, wra, wrb, 0, 0, Math.PI*2); c.fill();
+  c.fillStyle='rgba(175,175,175,0.48)'; // rim
+  c.beginPath(); c.ellipse(-wxo, wyf, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( wxo, wyf, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(-wxo, wyr, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( wxo, wyr, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
+
+  // Side mirrors (small dark protrusion near front)
+  c.fillStyle=darkColor;
+  c.fillRect(-bw/2-3, -bh*0.17, 3, 4);
+  c.fillRect( bw/2,   -bh*0.17, 3, 4);
 
   // Body gradient
   var bg=c.createLinearGradient(-bw/2,0,bw/2,0);
