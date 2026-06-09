@@ -101,6 +101,208 @@ function darkenHex(hex, amt) {
   return '#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');
 }
 
+// ══════════════════════════════════════════════════════════════
+//  UB SATELLITE-STYLE RENDERER  (Google Maps top-down look)
+// ══════════════════════════════════════════════════════════════
+function drawUBSatellite(c, S) {
+  const ub=S.ub, WW=S.worldW, WH=S.worldH;
+
+  // ── 1. Ground ────────────────────────────────────────────
+  c.fillStyle='#5c5246'; c.fillRect(0,0,WW,WH);
+  // texture: faint variation patches
+  c.fillStyle='rgba(0,0,0,0.055)';
+  for(let i=0;i<18;i++){
+    c.fillRect((i*347)%WW, (i*211)%WH, 180+((i*127)%130), 30+((i*89)%35));
+  }
+  c.fillStyle='rgba(255,255,255,0.012)';
+  for(let i=0;i<12;i++){
+    c.fillRect((i*421+100)%WW, (i*183+50)%WH, 100+((i*97)%90), 20+((i*71)%25));
+  }
+
+  // ── 2. Building blocks ───────────────────────────────────
+  S.ubBlocks?.forEach(b=>{
+    c.fillStyle='rgba(0,0,0,0.22)'; c.fillRect(b.x+4,b.y+4,b.w,b.h);
+    c.fillStyle=b.col; c.fillRect(b.x,b.y,b.w,b.h);
+    // parapet edge lines
+    c.strokeStyle='rgba(0,0,0,0.18)'; c.lineWidth=1; c.strokeRect(b.x,b.y,b.w,b.h);
+    c.strokeStyle='rgba(255,255,255,0.07)'; c.lineWidth=1.5; c.strokeRect(b.x+2,b.y+2,b.w-4,b.h-4);
+    // HVAC box (center)
+    if(b.w>40&&b.h>28){
+      c.fillStyle='rgba(0,0,0,0.12)';
+      c.fillRect(b.x+b.w/2-8,b.y+b.h/2-6,16,12);
+    }
+    if(b.label){
+      c.font='bold 8px monospace'; c.fillStyle='rgba(255,255,255,0.28)'; c.textAlign='center';
+      c.fillText(b.label, b.x+b.w/2, b.y+b.h/2+3);
+    }
+  });
+
+  // ── 3. Parking lots ──────────────────────────────────────
+  S.ubParkings?.forEach(p=>{
+    c.fillStyle='#3a3530'; c.fillRect(p.x,p.y,p.w,p.h);
+    c.strokeStyle='rgba(220,215,200,0.35)'; c.lineWidth=1;
+    const stalls=Math.floor(p.w/16);
+    for(let i=0;i<=stalls;i++){
+      c.beginPath(); c.moveTo(p.x+i*16,p.y); c.lineTo(p.x+i*16,p.y+p.h); c.stroke();
+    }
+  });
+
+  // ── 4. Sidewalks ─────────────────────────────────────────
+  c.fillStyle='#8a7d68';
+  c.fillRect(0,ub.nSidewY,WW,ub.sideH);
+  c.fillRect(0,ub.sSidewY,WW,ub.sideH);
+  // Cross street sidewalk zones
+  ub.crosses.forEach(([cx,cw])=>{
+    c.fillStyle='#8a7d68';
+    c.fillRect(cx-4,0,cw+8,WH);
+  });
+
+  // ── 5. Roads ─────────────────────────────────────────────
+  const roadCol='#282420';
+  // Cross streets drawn first (under main road)
+  ub.crosses.forEach(([cx,cw])=>{
+    c.fillStyle=roadCol; c.fillRect(cx,0,cw,WH);
+  });
+  // Main road
+  c.fillStyle=roadCol;
+  c.fillRect(0,ub.nRoadY,WW,ub.nRoadH);
+  c.fillRect(0,ub.sRoadY,WW,ub.sRoadH);
+  // Median
+  c.fillStyle='#2d4a20'; c.fillRect(0,ub.medY,WW,ub.medH);
+  // subtle median texture
+  c.fillStyle='rgba(0,0,0,0.12)';
+  for(let x=0;x<WW;x+=80) c.fillRect(x,ub.medY,40,ub.medH);
+
+  // ── 6. Lane markings ─────────────────────────────────────
+  const nL=ub.nRoadH/3, sL=ub.sRoadH/3;
+  // North road lane dividers (dashed white)
+  c.setLineDash([22,13]); c.strokeStyle='rgba(230,225,205,0.6)'; c.lineWidth=1.5;
+  for(let i=1;i<3;i++){
+    const ly=ub.nRoadY+nL*i;
+    c.beginPath(); c.moveTo(0,ly); c.lineTo(WW,ly); c.stroke();
+  }
+  // South road lane dividers
+  for(let i=1;i<3;i++){
+    const ly=ub.sRoadY+sL*i;
+    c.beginPath(); c.moveTo(0,ly); c.lineTo(WW,ly); c.stroke();
+  }
+  c.setLineDash([]);
+  // Road edge lines (solid white)
+  c.strokeStyle='rgba(235,230,210,0.75)'; c.lineWidth=2;
+  [[ub.nRoadY+1,ub.nRoadY+ub.nRoadH-1],[ub.sRoadY+1,ub.sRoadY+ub.sRoadH-1]].forEach(([y1,y2])=>{
+    c.beginPath(); c.moveTo(0,y1); c.lineTo(WW,y1); c.stroke();
+    c.beginPath(); c.moveTo(0,y2); c.lineTo(WW,y2); c.stroke();
+  });
+  // Cross street center dashes
+  ub.crosses.forEach(([cx,cw])=>{
+    c.setLineDash([8,6]); c.strokeStyle='rgba(230,225,205,0.45)'; c.lineWidth=1.5;
+    c.beginPath(); c.moveTo(cx+cw/2,0); c.lineTo(cx+cw/2,WH); c.stroke();
+    c.setLineDash([]);
+  });
+
+  // ── 7. Crosswalk stripes ─────────────────────────────────
+  ub.crosses.forEach(([cx,cw])=>{
+    // At north road
+    for(let i=0;i<4;i++){
+      c.fillStyle='rgba(238,232,215,0.72)';
+      c.fillRect(cx-3,ub.nRoadY+i*16+4,cw+6,9);
+    }
+    // At south road
+    for(let i=0;i<4;i++){
+      c.fillStyle='rgba(238,232,215,0.72)';
+      c.fillRect(cx-3,ub.sRoadY+i*16+4,cw+6,9);
+    }
+  });
+
+  // ── 8. Trees ─────────────────────────────────────────────
+  S.ubTrees?.forEach(t=>{
+    // shadow
+    c.fillStyle='rgba(0,0,0,0.28)';
+    c.beginPath(); c.ellipse(t.x+3,t.y+4,t.r*0.82,t.r*0.78,0,0,Math.PI*2); c.fill();
+    // canopy radial gradient
+    const tg=c.createRadialGradient(t.x-t.r*0.3,t.y-t.r*0.28,t.r*0.08,t.x,t.y,t.r);
+    tg.addColorStop(0,t.bright);
+    tg.addColorStop(0.55,t.base);
+    tg.addColorStop(1,t.dark);
+    c.fillStyle=tg; c.beginPath(); c.arc(t.x,t.y,t.r,0,Math.PI*2); c.fill();
+    // specular highlight
+    c.fillStyle='rgba(255,255,255,0.07)';
+    c.beginPath(); c.ellipse(t.x-t.r*0.22,t.y-t.r*0.22,t.r*0.38,t.r*0.32,-0.4,0,Math.PI*2); c.fill();
+  });
+
+  // ── 9. Traffic lights (small, roadside) ─────────────────
+  const lc={red:'#ef4444',yellow:'#fbbf24',green:'#22c55e'};
+  S.lights?.forEach(l=>{
+    c.fillStyle='#444'; c.fillRect(l.x-1,l.y+2,3,20);
+    c.fillStyle='#181818'; c.beginPath(); c.roundRect(l.x-8,l.y-30,16,34,3); c.fill();
+    ['red','yellow','green'].forEach((col,i)=>{
+      c.beginPath(); c.arc(l.x,l.y-22+i*11,4.5,0,Math.PI*2);
+      const on=l.state===col;
+      c.fillStyle=on?lc[col]:'rgba(255,255,255,0.06)';
+      if(on){c.shadowColor=lc[col]; c.shadowBlur=12;}
+      c.fill(); c.shadowBlur=0;
+    });
+  });
+
+  // ── 10. Signs ────────────────────────────────────────────
+  S.signs?.forEach(sg=>{
+    c.fillStyle='#555'; c.fillRect(sg.x-1.5,sg.y+1,3,16);
+    c.fillStyle='rgba(18,18,22,0.92)'; c.beginPath(); c.roundRect(sg.x-14,sg.y-28,28,28,3); c.fill();
+    c.font='16px serif'; c.textAlign='center'; c.fillText(sg.icon,sg.x,-10+sg.y);
+    if(S.car){
+      const d=Math.hypot(S.car.x-sg.x,S.car.y-sg.y);
+      if(d<110){
+        c.strokeStyle=`rgba(255,149,0,${0.9*(1-d/110)})`; c.lineWidth=2.5;
+        c.beginPath(); c.arc(sg.x,sg.y-14,20,0,Math.PI*2); c.stroke();
+      }
+    }
+  });
+
+  // ── 11. Pedestrians ──────────────────────────────────────
+  S.peds?.forEach(p=>{
+    for(let i=-3;i<3;i++){
+      c.fillStyle=i%2===0?'rgba(248,244,234,0.82)':'rgba(0,0,0,0.08)';
+      c.fillRect(p.x-22,p.y-20+i*8,44,6);
+    }
+    c.font='18px serif'; c.textAlign='center';
+    c.fillText(p.waiting?'🧍':'🚶',p.x,p.y+7);
+  });
+
+  // ── 12. Ambulance ────────────────────────────────────────
+  if(S.ambulance?.active){
+    const a=S.ambulance;
+    c.save(); c.translate(a.x,a.y+8);
+    if(Math.floor(Date.now()/150)%2){
+      c.beginPath(); c.arc(0,-18,9,0,Math.PI*2);
+      c.fillStyle='rgba(0,100,255,0.55)'; c.shadowColor='#0066ff'; c.shadowBlur=18; c.fill(); c.shadowBlur=0;
+    }
+    c.font='24px serif'; c.textAlign='center'; c.fillText('🚑',0,0);
+    c.restore();
+  }
+
+  // ── 13. Street name labels ───────────────────────────────
+  c.font='bold 8px monospace'; c.fillStyle='rgba(255,255,255,0.18)'; c.textAlign='left';
+  c.fillText('ЭНХТАЙВАНЫ ӨРГӨН ЧӨЛӨӨ  ▶', 22, ub.nRoadY+ub.nRoadH/2+3);
+  c.fillStyle='rgba(255,255,255,0.12)'; c.textAlign='right';
+  c.fillText('◀  PEACE AVENUE', WW-22, ub.sRoadY+ub.sRoadH/2+3);
+  ub.crosses.forEach(([cx,cw,name])=>{
+    c.font='bold 7px monospace'; c.fillStyle='rgba(255,149,0,0.4)'; c.textAlign='center';
+    c.fillText(name, cx+cw/2, ub.medY+ub.medH/2+3);
+  });
+
+  // ── 14. Particles ────────────────────────────────────────
+  S.particles?.forEach(p=>{
+    c.beginPath(); c.arc(p.x,p.y,p.r*(p.life/p.max),0,Math.PI*2);
+    c.fillStyle=`rgba(150,140,130,${0.28*p.life/p.max})`; c.fill();
+  });
+
+  // ── 15. Damage flash ─────────────────────────────────────
+  if(S._flash>0){
+    c.fillStyle=`rgba(239,68,68,${S._flash/20*0.22})`;
+    c.fillRect(-200,-200,WW+400,WH+400); S._flash--;
+  }
+}
+
 function hexToRgb(hex) {
   const n = parseInt(hex.replace('#',''),16);
   return `${(n>>16)&0xff},${(n>>8)&0xff},${n&0xff}`;
@@ -191,54 +393,138 @@ function buildMap(id) {
     S.roundabout = {x:cx,y:cy,r:68};
     S.signs = [{x:cx+90,y:cy-80,icon:'🔄',name:'Дугуй эргэлт',rule:'Дотор талын машинд замыг заавал тавина',triggered:false}];
   } else if (id==='ub') {
-    const W=simCW, H=simCH;
+    // ─── UB World: 2800×520, Peace Avenue satellite view ───
+    const WW=2800, WH=520;
+    S.worldW=WW; S.worldH=WH;
+
+    const ub = {
+      nRoadY:177, nRoadH:72,   // north lanes (eastbound)
+      medY:249,   medH:42,     // median green strip
+      sRoadY:291, sRoadH:72,   // south lanes (westbound)
+      nSidewY:158, sideH:19,   // sidewalks (N/S same height)
+      sSidewY:363,
+      // [x, width, name]
+      crosses:[
+        [300, 50,'Бага тойруу'],
+        [660, 50,'Чингисийн гудамж'],
+        [1060,52,'Сүхбаатарын талбай'],
+        [1500,52,'Их тойруу'],
+        [1920,50,'Нарны зам'],
+        [2360,50,'Сэлбийн гүүр'],
+      ],
+    };
+    S.ub = ub;
+
+    // roads for penalty checks + minimap
     S.roads = [
-      {x:0,y:H/2-36,w:W*3,h:72,name:'Энхтайваны өргөн чөлөө'},
-      {x:W*0.15-20,y:0,w:40,h:H,name:'Бага тойруу'},
-      {x:W*0.35-20,y:0,w:40,h:H,name:'Чингисийн өргөн чөлөө'},
-      {x:W*0.6-20,y:0,w:40,h:H,name:'Их тойруу'},
-      {x:W*0.82-20,y:0,w:40,h:H,name:'Сэлбийн гүүр'},
-      {x:0,y:H*0.25-16,w:W*3,h:32,name:'Хойд зам'},
-      {x:0,y:H*0.75-16,w:W*3,h:32,name:'Өмнөд зам'},
+      {x:0,y:ub.nRoadY,w:WW,h:ub.nRoadH,name:'Энхтайваны өргөн чөлөө'},
+      {x:0,y:ub.sRoadY,w:WW,h:ub.sRoadH,name:'Энхтайваны өргөн чөлөө'},
+      ...ub.crosses.map(([cx,cw,n])=>({x:cx,y:0,w:cw,h:WH,name:n})),
     ];
-    S.lights = [
-      {x:W*0.15,y:H/2-50,state:'green',t:0,cycle:220,phase:0,penalized:false},
-      {x:W*0.35,y:H/2-50,state:'red',t:0,cycle:220,phase:80,penalized:false},
-      {x:W*0.6,y:H/2-50,state:'green',t:0,cycle:220,phase:140,penalized:false},
-      {x:W*0.82,y:H/2-50,state:'red',t:0,cycle:220,phase:30,penalized:false},
-      {x:W*0.35,y:H*0.25-28,state:'green',t:0,cycle:180,phase:60,penalized:false},
-      {x:W*0.6,y:H*0.25-28,state:'red',t:0,cycle:180,phase:110,penalized:false},
-    ];
+
+    S.lights = ub.crosses.flatMap(([cx,,],i)=>[
+      {x:cx-4,y:ub.nRoadY-38,state:'red', t:0,cycle:200,phase:i*42, penalized:false},
+      {x:cx-4,y:ub.sRoadY-38,state:'green',t:0,cycle:200,phase:i*42+100,penalized:false},
+    ]);
+
     S.signs = [
-      {x:W*0.22,y:H/2-55,icon:'⚠️',name:'Анхааруулга — уулзвар',rule:'Уулзвар ойрхон, хурдаа бааруул',triggered:false},
-      {x:W*0.5,y:H/2+50,icon:'🚸',name:'Явган хүний гарц — Сүхбаатарын талбай',rule:'Явган хүнд заавал замыг тав',triggered:false},
-      {x:W*0.72,y:H*0.25-40,icon:'🔴',name:'STOP — Их дэлгүүрийн уулзвар',rule:'Бүрэн зогс, замыг шалга',triggered:false,isStop:true},
-      {x:W*0.88,y:H/2-55,icon:'🏎️',name:'Хурдны хязгаар 60',rule:'Хот дотор 60 км/ц-аас хэтрэхгүй',triggered:false},
+      {x:580, y:ub.nRoadY-44,icon:'⚠️',name:'Уулзвар ойрхон',rule:'Хурдаа бааруул',triggered:false},
+      {x:980, y:ub.nRoadY-44,icon:'🚸',name:'Явган хүний гарц',rule:'Явган хүнд заавал замыг тав',triggered:false},
+      {x:1420,y:ub.nRoadY-44,icon:'🔴',name:'STOP — Их тойруу',rule:'Бүрэн зогс',triggered:false,isStop:true},
+      {x:1850,y:ub.nRoadY-44,icon:'🏎️',name:'Хурдны хязгаар 60',rule:'Хот дотор 60 км/ц-аас хэтрэхгүй',triggered:false},
     ];
+
     S.peds = [
-      {x:W*0.5+15,y:H/2-32,vy:0.5,waiting:true,crossed:false,timer:200,penalized:false},
-      {x:W*0.5-15,y:H/2-32,vy:0.7,waiting:true,crossed:false,timer:320,penalized:false},
+      {x:1060+26,y:ub.nRoadY+12,vy:0.55,waiting:true,crossed:false,timer:220,penalized:false},
+      {x:1060+26,y:ub.nRoadY+36,vy:0.45,waiting:true,crossed:false,timer:380,penalized:false},
     ];
-    S.ubBuildings = [
-      {x:W*0.08,y:H*0.05,w:80,h:H*0.18,label:'Засгийн газар',c:'#1e293b'},
-      {x:W*0.28,y:H*0.05,w:100,h:H*0.16,label:'Их сургууль',c:'#1e3a2f'},
-      {x:W*0.44,y:H*0.03,w:120,h:H*0.2,label:'Их дэлгүүр',c:'#2d1b1b'},
-      {x:W*0.66,y:H*0.04,w:90,h:H*0.17,label:'Shangri-La',c:'#1a1a2e'},
-      {x:W*0.78,y:H*0.05,w:70,h:H*0.18,label:'Blue Sky',c:'#0f2027'},
-      {x:W*0.08,y:H*0.58,w:85,h:H*0.3,label:'МҮТҮО',c:'#1e293b'},
-      {x:W*0.25,y:H*0.6,w:110,h:H*0.25,label:'Байшин',c:'#1a2a1a'},
-      {x:W*0.48,y:H*0.6,w:95,h:H*0.28,label:'Номин',c:'#2a1a1a'},
-      {x:W*0.7,y:H*0.58,w:80,h:H*0.3,label:'Оффис',c:'#1a1a2e'},
+
+    // ── Tree rows ──
+    S.ubTrees = [];
+    const tPalette=[
+      {bright:'#3d6a28',base:'#1e4e14',dark:'#123010'},
+      {bright:'#426c26',base:'#1c5012',dark:'#10300a'},
+      {bright:'#386022',base:'#1c4810',dark:'#122e0a'},
+      {bright:'#3a6426',base:'#204e14',dark:'#14320e'},
     ];
-    S.ubLandmarks = [
-      {x:W*0.42,y:H/2,icon:'🏛️',label:'Сүхбаатарын талбай'},
-      {x:W*0.62,y:H*0.24,icon:'🏥',label:'Нэгдсэн эмнэлэг'},
-      {x:W*0.18,y:H*0.74,icon:'🎓',label:'МУИС'},
+    const tp=(x,salt=0)=>tPalette[Math.floor(Math.abs(Math.sin(x*0.08+salt))*tPalette.length)];
+
+    // Median (dense)
+    for(let x=18;x<WW;x+=33){
+      if(ub.crosses.some(([cx,cw])=>x>cx-20&&x<cx+cw+20)) continue;
+      S.ubTrees.push({x,y:ub.medY+ub.medH/2,r:13+Math.sin(x*0.17)*2,...tp(x)});
+    }
+    // North road outer edge
+    for(let x=22;x<WW;x+=37){
+      if(ub.crosses.some(([cx,cw])=>x>cx-18&&x<cx+cw+18)) continue;
+      S.ubTrees.push({x,y:ub.nSidewY-11,r:11+Math.cos(x*0.13)*2.5,...tp(x,50)});
+    }
+    // South road outer edge
+    for(let x=22;x<WW;x+=37){
+      if(ub.crosses.some(([cx,cw])=>x>cx-18&&x<cx+cw+18)) continue;
+      S.ubTrees.push({x,y:ub.sSidewY+ub.sideH+12,r:11+Math.sin(x*0.11)*2.5,...tp(x,100)});
+    }
+    // Yard clusters (north + south)
+    for(let x=70;x<WW;x+=110){
+      if(ub.crosses.some(([cx,cw])=>x>cx-35&&x<cx+cw+35)) continue;
+      for(let j=0;j<3;j++){
+        const tx=x+j*26+Math.sin(x*0.3+j)*12;
+        S.ubTrees.push({x:tx,y:75+Math.cos(tx*0.2)*18,r:8+Math.sin(tx)*1.5,...tp(tx,j*70)});
+        S.ubTrees.push({x:tx,y:ub.sSidewY+ub.sideH+42+Math.sin(tx*0.2)*14,r:8+Math.cos(tx)*1.5,...tp(tx,j*90+200)});
+      }
+    }
+
+    // ── City block buildings (top-down) ──
+    S.ubBlocks = [];
+    const bPalette=['#8a7a68','#7a8a80','#9a8e78','#7a7082','#8a7268','#6a7a88','#8e8278','#787c6a','#6a6870','#8a8068'];
+    const bp=(x,salt=0)=>bPalette[Math.floor(Math.abs(Math.sin(x*0.12+salt))*bPalette.length)];
+    const maxNY=ub.nSidewY-20, minSY=ub.sSidewY+ub.sideH+22;
+
+    const addRow=(startY, rowH, rowOffset=0, salt=0)=>{
+      let bx=rowOffset;
+      while(bx<WW){
+        const skip=ub.crosses.some(([cx,cw])=>bx+8>cx-4&&bx<cx+cw+12);
+        if(skip){bx+=ub.crosses.find(([cx,cw])=>bx+8>cx-4&&bx<cx+cw+12)?.[1]+15||60;continue;}
+        const bw=65+Math.floor(Math.abs(Math.sin(bx*0.11+salt))*55);
+        const bh=Math.min(rowH,maxNY-startY-4);
+        if(bx+bw>WW||bh<10) break;
+        S.ubBlocks.push({x:bx,y:startY,w:bw,h:bh,col:bp(bx,salt),label:''});
+        bx+=bw+6+Math.floor(Math.abs(Math.sin(bx*0.22+salt))*14);
+      }
+    };
+    addRow(4, 52, 0, 0);      // north row 1 (close to top)
+    addRow(62, 58, 30, 1.5);  // north row 2
+
+    // south buildings
+    let sbx=0;
+    while(sbx<WW){
+      const skip=ub.crosses.some(([cx,cw])=>sbx+8>cx-4&&sbx<cx+cw+12);
+      if(skip){sbx+=ub.crosses.find(([cx,cw])=>sbx+8>cx-4&&sbx<cx+cw+12)?.[1]+15||60;continue;}
+      const bw=70+Math.floor(Math.abs(Math.sin(sbx*0.1+2))*60);
+      const bh=Math.min(58+Math.floor(Math.abs(Math.cos(sbx*0.08+1))*28), WH-minSY-4);
+      if(sbx+bw>WW) break;
+      S.ubBlocks.push({x:sbx,y:minSY,w:bw,h:bh,col:bp(sbx,2),label:''});
+      sbx+=bw+7+Math.floor(Math.abs(Math.cos(sbx*0.19+1))*12);
+    }
+
+    // Named landmarks override
+    S.ubBlocks.push({x:990, y:5,  w:130,h:55,col:'#6a5e52',label:'Их дэлгүүр'});
+    S.ubBlocks.push({x:1400,y:8,  w:110,h:50,col:'#527080',label:'Shangri-La'});
+    S.ubBlocks.push({x:2100,y:6,  w:95, h:52,col:'#505870',label:'Blue Sky'});
+    S.ubBlocks.push({x:650, y:minSY,w:120,h:55,col:'#5a506a',label:'МУИС'});
+    S.ubBlocks.push({x:1060,y:minSY,w:100,h:50,col:'#526048',label:'МҮТҮО'});
+
+    // Parking lots
+    S.ubParkings=[
+      {x:320, y:maxNY+2,  w:300,h:16},
+      {x:1120,y:4,        w:240,h:14},
+      {x:1550,y:maxNY+2,  w:320,h:16},
     ];
-    S.car = {x:W*0.05,y:H/2,angle:0,speed:0,maxSpeed:5.2,accel:0.18,brake:0.25,friction:0.065};
-    S.cam = {x:0, y:0};
-    S.ubMode = true;
-    simLog('🌆 Улаанбаатар хотын замд тавтай морил! WASD/сумны товчоор жолоодно уу.');
+
+    // Car: right lane of eastbound, at world start
+    S.car={x:80,y:ub.nRoadY+ub.nRoadH*5/6,angle:0,speed:0,maxSpeed:5.2,accel:0.18,brake:0.25,friction:0.065};
+    S.ubMode=true;
+    simLog('🌆 Улаанбаатар — Энхтайваны өргөн чөлөө. WASD/сумны товчоор жолоодно уу.');
   }
   simUpdateHUD();
 }
@@ -277,8 +563,13 @@ function simUpdate() {
 
   car.x += Math.cos(car.angle)*car.speed;
   car.y += Math.sin(car.angle)*car.speed;
-  car.x = Math.max(16, Math.min(simCW-16, car.x));
-  car.y = Math.max(16, Math.min(simCH-16, car.y));
+  if (S.ubMode) {
+    car.x = Math.max(16, Math.min(S.worldW-16, car.x));
+    car.y = Math.max(16, Math.min(S.worldH-16, car.y));
+  } else {
+    car.x = Math.max(16, Math.min(simCW-16, car.x));
+    car.y = Math.max(16, Math.min(simCH-16, car.y));
+  }
 
   const kmh = Math.round(Math.abs(car.speed)*18);
   document.getElementById('hud-speed').textContent = kmh;
@@ -378,19 +669,68 @@ function simDraw() {
 
   let offX=0, offY=0;
   if (S.ubMode) {
-    offX = -(car.x - simCW*0.35);
+    offX = -(car.x - simCW*0.38);
     offY = -(car.y - simCH*0.5);
-    offX = Math.max(-simCW*1.5, Math.min(simCW*0.2, offX));
-    offY = Math.max(-simCH*0.4, Math.min(simCH*0.4, offY));
+    offX = Math.max(-(S.worldW - simCW*0.62), Math.min(simCW*0.38, offX));
+    offY = Math.max(-(S.worldH - simCH*0.5), Math.min(simCH*0.1, offY));
   }
   c.save();
   c.translate(offX, offY);
 
-  // ── Background / terrain ──
-  const bgX = S.ubMode ? -300 : -80;
-  const bgY = S.ubMode ? -300 : -80;
-  const bgW = S.ubMode ? simCW*3+600 : simCW+200;
-  const bgH = S.ubMode ? simCH*2+600 : simCH+200;
+  // ── UB mode: full satellite rendering ──
+  if (S.ubMode) {
+    drawUBSatellite(c, S);
+    drawTraffic(S, c, offX, offY);
+    c.restore();
+    const sx=car.x+offX, sy=car.y+offY;
+    drawSimCar({...car,x:sx,y:sy});
+    // UB header bar
+    const hg=c.createLinearGradient(0,0,0,34);
+    hg.addColorStop(0,'rgba(6,6,12,0.9)');hg.addColorStop(1,'rgba(6,6,12,0)');
+    c.fillStyle=hg;c.fillRect(0,0,simCW,38);
+    c.font='bold 11px monospace';c.fillStyle='rgba(255,106,0,0.85)';c.textAlign='center';
+    c.fillText('🌆  УЛААНБААТАР — Энхтайваны өргөн чөлөө  |  Чөлөөт жолоодлого',simCW/2,18);
+    // Compass
+    c.save();c.translate(simCW-46,simCH-46);
+    c.beginPath();c.arc(0,0,24,0,Math.PI*2);c.fillStyle='rgba(6,6,12,0.88)';c.fill();
+    c.strokeStyle='rgba(255,106,0,0.3)';c.lineWidth=1.5;c.stroke();
+    [['Х',-Math.PI/2,'#ff6a00'],['З',0,'rgba(240,238,234,0.4)'],['Ө',Math.PI/2,'rgba(240,238,234,0.4)'],['Д',Math.PI,'rgba(240,238,234,0.4)']].forEach(([d,a,col])=>{
+      c.font='bold 9px monospace';c.fillStyle=col;c.textAlign='center';
+      c.fillText(d,Math.cos(a)*16,Math.sin(a)*16+3);
+    });
+    c.restore();
+    // Minimap
+    const mmEl=document.getElementById('sim-minimap');
+    if(mmEl){
+      let cv=mmEl.querySelector('canvas');
+      if(!cv){cv=document.createElement('canvas');cv.width=100;cv.height=78;mmEl.appendChild(cv);}
+      const mc=cv.getContext('2d');
+      mc.fillStyle='#0d1008';mc.fillRect(0,0,100,78);
+      const mW=S.worldW,mH=S.worldH;
+      // roads
+      S.roads?.forEach(r=>{mc.fillStyle='#383228';mc.fillRect(r.x/mW*100,r.y/mH*78,Math.max(r.w/mW*100,2),Math.max(r.h/mH*78,2));});
+      // median green
+      const ub=S.ub;
+      mc.fillStyle='#2d4820';mc.fillRect(0,ub.medY/mH*78,100,Math.max(ub.medH/mH*78,2));
+      // car dot
+      const mx=car.x/mW*100,my=car.y/mH*78;
+      mc.beginPath();mc.arc(mx,my,4,0,Math.PI*2);
+      mc.fillStyle='#ff6a00';mc.shadowColor='#ff6a00';mc.shadowBlur=8;mc.fill();mc.shadowBlur=0;
+      mc.beginPath();
+      mc.moveTo(mx+Math.cos(car.angle)*6,my+Math.sin(car.angle)*6);
+      mc.lineTo(mx+Math.cos(car.angle+2.4)*3,my+Math.sin(car.angle+2.4)*3);
+      mc.lineTo(mx+Math.cos(car.angle-2.4)*3,my+Math.sin(car.angle-2.4)*3);
+      mc.closePath();mc.fillStyle='#ff9500';mc.fill();
+      mc.strokeStyle='rgba(255,106,0,0.3)';mc.lineWidth=1;mc.strokeRect(0,0,100,78);
+    }
+    return; // skip rest of simDraw
+  }
+
+  // ── Non-UB generic rendering ──
+  const bgX = -80;
+  const bgY = -80;
+  const bgW = simCW+200;
+  const bgH = simCH+200;
 
   if (S.iceMode) {
     const iceGrad = c.createLinearGradient(0,0,0,bgH);
@@ -403,8 +743,6 @@ function simDraw() {
       const ty=(Math.cos(i*97.3)*0.5+0.5)*bgH+bgY;
       c.beginPath();c.arc(tx,ty,1.5+Math.sin(i)*1,0,Math.PI*2);c.fill();
     }
-  } else if (S.ubMode) {
-    c.fillStyle='#0d1117'; c.fillRect(bgX,bgY,bgW,bgH);
   } else {
     // Green grass
     const grassGrad = c.createLinearGradient(0,0,0,bgH);
@@ -418,60 +756,26 @@ function simDraw() {
     }
   }
 
-  // ── UB Buildings ──
-  if (S.ubBuildings) {
-    S.ubBuildings.forEach(b=>{
-      // building shadow
-      c.fillStyle='rgba(0,0,0,0.3)';
-      c.fillRect(b.x+4,b.y+4,b.w,b.h);
-      // building body
-      const bGrad=c.createLinearGradient(b.x,b.y,b.x+b.w,b.y);
-      bGrad.addColorStop(0,b.c);bGrad.addColorStop(1,lightenHex(b.c,15));
-      c.fillStyle=bGrad; c.fillRect(b.x,b.y,b.w,b.h);
-      // outline
-      c.strokeStyle='rgba(255,255,255,0.08)';c.lineWidth=1;c.strokeRect(b.x,b.y,b.w,b.h);
-      // windows
-      const wCols=Math.floor(b.w/14), wRows=Math.floor(b.h/14);
-      for(let r=0;r<wRows;r++) for(let cl=0;cl<wCols;cl++){
-        const lit=Math.sin(b.x*0.07+cl*4.1+r*2.7)>0.1;
-        c.fillStyle=lit?'rgba(255,235,150,0.55)':'rgba(255,255,255,0.02)';
-        c.fillRect(b.x+4+cl*14,b.y+6+r*14,8,8);
-      }
-      // label
-      c.font='bold 9px monospace';c.fillStyle='rgba(255,255,255,0.3)';
-      c.textAlign='center';c.fillText(b.label,b.x+b.w/2,b.y+b.h+12);
-    });
-  }
-
   // ── Roads ──
   S.roads?.forEach(r=>{
     const horiz = r.w > r.h;
     // sidewalks
     if (!S.iceMode) {
-      c.fillStyle=S.ubMode?'#1e2030':'#2a2820';
+      c.fillStyle='#2a2820';
       if(horiz){c.fillRect(r.x,r.y-9,r.w,9);c.fillRect(r.x,r.y+r.h,r.w,9);}
       else{c.fillRect(r.x-9,r.y,9,r.h);c.fillRect(r.x+r.w,r.y,9,r.h);}
     }
-    // road surface
-    const roadCol = S.iceMode ? '#8090a8' : S.ubMode ? '#1e2330' : '#282828';
-    c.fillStyle=roadCol;
+    c.fillStyle=S.iceMode?'#8090a8':'#282828';
     c.fillRect(r.x,r.y,r.w,r.h);
-    // road edge lines (white)
     c.strokeStyle=S.iceMode?'rgba(255,255,255,0.5)':'rgba(255,255,255,0.35)';
     c.lineWidth=2;c.setLineDash([]);
     c.strokeRect(r.x+1,r.y+1,r.w-2,r.h-2);
-    // center dashes
     c.setLineDash([horiz?22:16,13]);
-    c.strokeStyle=S.ubMode?'rgba(255,200,50,0.4)':S.iceMode?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.3)';
+    c.strokeStyle=S.iceMode?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.3)';
     c.lineWidth=2.5;c.beginPath();
     if(horiz){c.moveTo(r.x,r.y+r.h/2);c.lineTo(r.x+r.w,r.y+r.h/2);}
     else{c.moveTo(r.x+r.w/2,r.y);c.lineTo(r.x+r.w/2,r.y+r.h);}
     c.stroke();c.setLineDash([]);
-    // road name (UB)
-    if(S.ubMode&&r.name&&horiz&&r.w>200){
-      c.font='bold 10px monospace';c.fillStyle='rgba(255,149,0,0.3)';
-      c.textAlign='left';c.fillText(r.name,r.x+14,r.y+r.h/2+4);
-    }
   });
 
   // ── Ice patches ──
@@ -566,12 +870,6 @@ function simDraw() {
     }
   });
 
-  // ── UB Landmarks ──
-  S.ubLandmarks?.forEach(lm=>{
-    c.font='22px serif';c.textAlign='center';c.fillText(lm.icon,lm.x,lm.y);
-    c.font='bold 9px monospace';c.fillStyle='rgba(255,106,0,0.5)';
-    c.fillText(lm.label,lm.x,lm.y+18);
-  });
 
   // ── Ambulance ──
   if(S.ambulance?.active){
@@ -624,46 +922,20 @@ function simDraw() {
   c.restore(); // end camera transform
 
   // ── Player car (screen space) ──
-  const sx = S.ubMode ? car.x+offX : car.x;
-  const sy = S.ubMode ? car.y+offY : car.y;
-  drawSimCar({...car, x:sx, y:sy});
+  drawSimCar({...car, x:car.x, y:car.y});
 
-  // ── UB overlay ──
-  if(S.ubMode){
-    const hGrad=c.createLinearGradient(0,0,0,32);
-    hGrad.addColorStop(0,'rgba(6,6,12,0.92)');hGrad.addColorStop(1,'rgba(6,6,12,0)');
-    c.fillStyle=hGrad;c.fillRect(0,0,simCW,36);
-    c.font='bold 11px monospace';c.fillStyle='rgba(255,106,0,0.85)';
-    c.textAlign='center';
-    c.fillText('🌆  УЛААНБААТАР — Энхтайваны өргөн чөлөө  |  Чөлөөт жолоодлого',simCW/2,18);
-    // Compass
-    c.save();c.translate(simCW-46,simCH-46);
-    c.beginPath();c.arc(0,0,24,0,Math.PI*2);
-    c.fillStyle='rgba(6,6,12,0.85)';c.fill();
-    c.strokeStyle='rgba(255,106,0,0.25)';c.lineWidth=1.5;c.stroke();
-    [['Х',-Math.PI/2,'#ff6a00'],['З',0,'rgba(240,238,234,0.4)'],['Ө',Math.PI/2,'rgba(240,238,234,0.4)'],['Д',Math.PI,'rgba(240,238,234,0.4)']].forEach(([d,a,col])=>{
-      c.font='bold 9px monospace';c.fillStyle=col;c.textAlign='center';
-      c.fillText(d,Math.cos(a)*16,Math.sin(a)*16+3);
-    });
-    c.restore();
-  }
-
-  // ── Minimap ──
+  // ── Minimap (non-UB) ──
   const mmEl=document.getElementById('sim-minimap');
   if(mmEl){
     let cv=mmEl.querySelector('canvas');
     if(!cv){cv=document.createElement('canvas');cv.width=100;cv.height=78;mmEl.appendChild(cv);}
     const mc=cv.getContext('2d');
-    const MW=100,MH=78;
-    mc.fillStyle='#08080e';mc.fillRect(0,0,MW,MH);
-    const mW=S.ubMode?simCW*2.5:simCW, mH=S.ubMode?simCH*1.8:simCH;
-    // roads on minimap
+    mc.fillStyle='#08080e';mc.fillRect(0,0,100,78);
     S.roads?.forEach(r=>{
       mc.fillStyle='#303050';
-      mc.fillRect(r.x/mW*MW,r.y/mH*MH,Math.max(r.w/mW*MW,2),Math.max(r.h/mH*MH,2));
+      mc.fillRect(r.x/simCW*100,r.y/simCH*78,Math.max(r.w/simCW*100,2),Math.max(r.h/simCH*78,2));
     });
-    // car dot with direction arrow
-    const mx=car.x/mW*MW, my=car.y/mH*MH;
+    const mx=car.x/simCW*100, my=car.y/simCH*78;
     mc.beginPath();mc.arc(mx,my,4,0,Math.PI*2);
     mc.fillStyle='#ff6a00';mc.shadowColor='#ff6a00';mc.shadowBlur=8;mc.fill();mc.shadowBlur=0;
     mc.beginPath();
@@ -671,8 +943,7 @@ function simDraw() {
     mc.lineTo(mx+Math.cos(car.angle+2.4)*3,my+Math.sin(car.angle+2.4)*3);
     mc.lineTo(mx+Math.cos(car.angle-2.4)*3,my+Math.sin(car.angle-2.4)*3);
     mc.closePath();mc.fillStyle='#ff9500';mc.fill();
-    // border
-    mc.strokeStyle='rgba(255,106,0,0.3)';mc.lineWidth=1;mc.strokeRect(0,0,MW,MH);
+    mc.strokeStyle='rgba(255,106,0,0.3)';mc.lineWidth=1;mc.strokeRect(0,0,100,78);
   }
 }
 
