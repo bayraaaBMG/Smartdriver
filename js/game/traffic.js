@@ -260,12 +260,17 @@ function spawnPeds() {
   G.peds = [];
   wInters.forEach(function(inter) {
     var light = G.lights.find(function(l){ return Math.hypot(l.x-inter.x, l.y-inter.y)<15; });
-    var count = 2 + Math.floor(Math.random()*3);
+    // 1-2 pedestrians per intersection, each at a FIXED crosswalk column
+    // They cross the horizontal road (move in Y), staying within the vertical road's X span
+    var count = 1 + Math.floor(Math.random()*2);
     for (var i=0; i<count; i++) {
       var side = Math.random()>0.5 ? 1 : -1;
-      var startY = inter.y + side*(inter.hw + 18 + Math.random()*12);
-      var endY   = inter.y - side*(inter.hw + 18 + Math.random()*12);
-      var cx = inter.x + (Math.random()-0.5)*inter.vw*0.85;
+      // Start on sidewalk just past the crosswalk stripe zone
+      var startY = inter.y + side*(inter.hw + 28);
+      var endY   = inter.y - side*(inter.hw + 28);
+      // Pick a crosswalk column: left third, center, or right third of vertical road
+      var cols = [-0.5, 0, 0.5];
+      var cx = inter.x + cols[i % cols.length] * inter.vw * 0.75;
       G.peds.push(new Pedestrian(cx, startY, endY, light));
     }
   });

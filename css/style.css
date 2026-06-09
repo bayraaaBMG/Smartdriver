@@ -406,10 +406,76 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height
   .sim-botbar .sim-keys{display:none}
 }
 @media(max-width:600px){
-  .q-images.two-img{grid-template-columns:1fr}
   .q-img{max-height:200px}
   .menu-modes{grid-template-columns:1fr}
   .result-grid{grid-template-columns:repeat(3,1fr)}
   .mob-ctrl{display:flex!important}
   .sim-keys{display:none}
+}
+
+/* ════════════════════════════════════════
+   MENU REDESIGN
+════════════════════════════════════════ */
+#menu-screen{
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;padding:2.5rem 1.5rem 3rem;
+  background:radial-gradient(ellipse 90% 50% at 50% 0%,rgba(255,106,0,0.10),transparent 65%);
+}
+.menu-brand{text-align:center;margin-bottom:1.8rem}
+.menu-brand-tag{
+  font-family:var(--font-m);font-size:0.68rem;letter-spacing:0.18em;
+  color:rgba(240,238,234,0.28);text-transform:uppercase;margin-top:0.35rem;
+}
+.menu-hero{
+  text-align:center;margin-bottom:2.5rem;
+  border-top:1px solid rgba(255,106,0,0.15);
+  border-bottom:1px solid rgba(255,106,0,0.08);
+  padding:1.2rem 0;width:100%;max-width:720px;
+}
+.menu-hero-line{
+  font-size:1rem;font-weight:700;color:rgba(240,238,234,0.72);
+  letter-spacing:0.01em;margin-bottom:0.75rem;
+}
+.menu-hero-pills{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center}
+.hero-pill{
+  font-family:var(--font-m);font-size:0.62rem;padding:4px 10px;border-radius:20px;
+  background:rgba(255,106,0,0.1);color:rgba(255,150,0,0.85);
+  border:1px solid rgba(255,106,0,0.22);letter-spacing:0.06em;
+}
+.menu-section{width:100%;max-width:900px;margin-bottom:2.2rem}
+.menu-section-hdr{
+  display:flex;align-items:baseline;gap:0.6rem;
+  margin-bottom:1rem;padding-bottom:0.55rem;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.menu-section-icon{font-size:1rem}
+.menu-section-title{font-weight:900;font-size:1.05rem;letter-spacing:-0.01em}
+.menu-section-sub{
+  font-family:var(--font-m);font-size:0.62rem;
+  color:var(--muted);letter-spacing:0.08em;margin-left:auto;
+}
+.menu-keyhelp{
+  font-family:var(--font-m);font-size:0.6rem;
+  color:rgba(240,238,234,0.18);letter-spacing:0.08em;
+  margin-top:0.5rem;text-align:center;
+}
+.logo-sub{display:none} /* replaced by menu-brand-tag */
+
+/* ── QUIZ: single image hint ── */
+.q-img-hint{
+  font-family:var(--font-m);font-size:0.6rem;
+  color:rgba(240,238,234,0.22);letter-spacing:0.08em;
+  text-align:center;padding:5px 0 6px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  background:rgba(0,0,0,0.25);
+  border-radius:0 0 3px 3px;
+}
+
+/* ── QUIZ: one-img layout fills width properly ── */
+.q-images.one-img{grid-template-columns:1fr}
+.q-images.one-img .q-img{max-height:54vh;object-fit:contain}
+
+@media(max-width:600px){
+  .menu-section-sub{display:none}
+  .menu-hero-line{font-size:0.88rem}
 }

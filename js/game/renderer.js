@@ -350,52 +350,72 @@ function rPeds(c) {
 function _drawCar(c, car, bodyColor, darkColor, isPlayer) {
   c.save(); c.translate(car.x,car.y); c.rotate(car.angle);
   var bw=car.w, bh=car.h;
+  var r = isPlayer ? 4 : 3;
 
-  // Shadow
-  c.fillStyle='rgba(0,0,0,0.28)';
-  c.fillRect(-bw/2+4,-bh/2+6,bw,bh);
+  // Drop shadow
+  c.fillStyle='rgba(0,0,0,0.32)';
+  c.fillRect(-bw/2+5,-bh/2+7,bw,bh);
+
+  // Wheels — 4 dark rectangles at corners (drawn before body)
+  var ww=5, wh=7;
+  c.fillStyle='#1a1a1a';
+  c.fillRect(-bw/2-1,      -bh/2+3,      ww, wh); // front-left
+  c.fillRect( bw/2-ww+1,   -bh/2+3,      ww, wh); // front-right
+  c.fillRect(-bw/2-1,       bh/2-wh-3,   ww, wh); // rear-left
+  c.fillRect( bw/2-ww+1,    bh/2-wh-3,   ww, wh); // rear-right
+  // Wheel highlight (shine)
+  c.fillStyle='rgba(255,255,255,0.09)';
+  c.fillRect(-bw/2-1, -bh/2+3, 2, wh);
+  c.fillRect( bw/2-1, -bh/2+3, 2, wh);
 
   // Body gradient
   var bg=c.createLinearGradient(-bw/2,0,bw/2,0);
   bg.addColorStop(0,darkColor);
-  bg.addColorStop(0.3,bodyColor);
-  bg.addColorStop(0.7,bodyColor);
+  bg.addColorStop(0.25,bodyColor);
+  bg.addColorStop(0.75,bodyColor);
   bg.addColorStop(1,darkColor);
   c.fillStyle=bg;
   if (typeof c.roundRect==='function'){
-    c.beginPath();c.roundRect(-bw/2,-bh/2,bw,bh,isPlayer?4:3);c.fill();
-  } else {c.fillRect(-bw/2,-bh/2,bw,bh);}
+    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,r);c.fill();
+  } else {c.fillRect(-bw/2+1,-bh/2,bw-2,bh);}
+
+  // Roof panel (slightly darker center band)
+  var rg=c.createLinearGradient(-bw/2,0,bw/2,0);
+  rg.addColorStop(0,'rgba(0,0,0,0.22)');
+  rg.addColorStop(0.5,isPlayer?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.05)');
+  rg.addColorStop(1,'rgba(0,0,0,0.22)');
+  c.fillStyle=rg;
+  c.fillRect(-bw/2+3, -bh*0.2, bw-6, bh*0.4);
+
+  // Windshield (front glass)
+  c.fillStyle=isPlayer?'rgba(140,215,255,0.42)':'rgba(120,190,240,0.28)';
+  if (typeof c.roundRect==='function'){
+    c.beginPath();c.roundRect(-bw/2+3,-bh/2+5,bw-6,bh*0.22,2);c.fill();
+  } else { c.fillRect(-bw/2+3,-bh/2+5,bw-6,bh*0.22); }
+  // Glass highlight
+  c.fillStyle='rgba(255,255,255,0.14)';
+  c.fillRect(-bw/2+4,-bh/2+6,bw/2-4,3);
+
+  // Rear glass
+  c.fillStyle=isPlayer?'rgba(100,170,220,0.30)':'rgba(90,155,200,0.18)';
+  c.fillRect(-bw/2+3,bh/2-bh*0.22,bw-6,bh*0.18);
 
   // Damage dents (player only)
   if (isPlayer && car.damaged) {
-    c.fillStyle='rgba(0,0,0,0.25)';
+    c.fillStyle='rgba(0,0,0,0.30)';
     car.dents.forEach(function(d){
-      c.beginPath(); c.arc(d.lx,d.ly,4,0,Math.PI*2); c.fill();
+      c.beginPath(); c.arc(d.lx,d.ly,3.5,0,Math.PI*2); c.fill();
+      // Dent scratch line
+      c.strokeStyle='rgba(0,0,0,0.45)'; c.lineWidth=1;
+      c.beginPath(); c.moveTo(d.lx-3,d.ly); c.lineTo(d.lx+3,d.ly+2); c.stroke();
     });
   }
 
-  // Windshield
-  c.fillStyle='rgba(130,205,255,0.38)';
-  c.fillRect(-bw/2+2,-bh/2+4,bw-4,bh*0.24);
-  // Rear glass
-  c.fillStyle='rgba(130,205,255,0.22)';
-  c.fillRect(-bw/2+2,bh/2-bh*0.22,bw-4,bh*0.18);
-
-  if (isPlayer) {
-    // Roof highlight
-    var rg=c.createLinearGradient(-bw/2+3,-bh*0.05,bw/2-3,-bh*0.05);
-    rg.addColorStop(0,'rgba(0,0,0,0.25)');
-    rg.addColorStop(0.5,'rgba(255,255,255,0.14)');
-    rg.addColorStop(1,'rgba(0,0,0,0.25)');
-    c.fillStyle=rg;
-    c.fillRect(-bw/2+3,-bh*0.18,bw-6,bh*0.36);
-  }
-
   // Outline
-  c.strokeStyle='rgba(0,0,0,0.42)'; c.lineWidth=1; c.setLineDash([]);
+  c.strokeStyle='rgba(0,0,0,0.45)'; c.lineWidth=1; c.setLineDash([]);
   if (typeof c.roundRect==='function'){
-    c.beginPath();c.roundRect(-bw/2,-bh/2,bw,bh,isPlayer?4:3);c.stroke();
-  } else {c.strokeRect(-bw/2,-bh/2,bw,bh);}
+    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,r);c.stroke();
+  } else {c.strokeRect(-bw/2+1,-bh/2,bw-2,bh);}
 
   c.restore();
 }

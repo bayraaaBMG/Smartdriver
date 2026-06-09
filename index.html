@@ -11,56 +11,90 @@
 
 <!-- ══════════ MENU ══════════ -->
 <div id="menu-screen">
-  <div class="logo-mark">SMART<span>DRIVER</span></div>
-  <div class="logo-sub">Замын хөдөлгөөний дүрмийн тест · Mongolia</div>
-  <div class="menu-modes">
-    <div class="mode-card" style="--hover-c:#ef4444;--hover-bg:rgba(239,68,68,0.04)" onclick="showHot20()">
-      <span class="mc-badge badge-hot">🔥 ТҮГЭЭМЭЛ</span>
-      <div class="mc-icon">🎯</div>
-      <div class="mc-title">Түгээмэл 20 Асуулт</div>
-      <div class="mc-desc">Шалгалтанд хамгийн байнга гардаг 20 асуулт. Эхлэхийн өмнө заавал үзэх!</div>
-    </div>
-    <div class="mode-card" style="--hover-c:#22c55e;--hover-bg:rgba(34,197,94,0.04)" onclick="startRandomQuiz()">
-      <span class="mc-badge badge-new">PRACTICE</span>
-      <div class="mc-icon">🎲</div>
-      <div class="mc-title">Санамсаргүй Тест</div>
-      <div class="mc-desc">40 картаас санамсаргүй 20 асуулт. Тайлбартай, зурагтай. Дадлага хийх.</div>
-    </div>
-    <div class="mode-card" style="--hover-c:#3b82f6;--hover-bg:rgba(59,130,246,0.04)" onclick="showCardSelect()">
-      <span class="mc-badge badge-all">КАРТ 1–40</span>
-      <div class="mc-icon">📋</div>
-      <div class="mc-title">Картаар Сонгох</div>
-      <div class="mc-desc">40 карт бүрийг зурагтайгаар үзэх. Тус бүр 20 асуулт, зөв хариулт бүртэй.</div>
-    </div>
-    <div class="mode-card" style="--hover-c:#f59e0b;--hover-bg:rgba(245,158,11,0.04)" onclick="startExamMode()">
-      <span class="mc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">EXAM</span>
-      <div class="mc-icon">⏱️</div>
-      <div class="mc-title">Шалгалтын Горим</div>
-      <div class="mc-desc">Бодит шалгалттай ижил. 20 асуулт, 20 минут. Тайлбар харагдахгүй.</div>
-    </div>
-    <div class="mode-card" style="--hover-c:#a855f7;--hover-bg:rgba(168,85,247,0.04)" onclick="showSimulator()">
-      <span class="mc-badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3)">🎮 СЦЕНАРИ</span>
-      <div class="mc-icon">🚗</div>
-      <div class="mc-title">Виртуал Жолоодлого</div>
-      <div class="mc-desc">Улаанбаатарын замд жолоо барих дадлага. 6 сценари. WASD товч ашиглана.</div>
-    </div>
-    <div class="mode-card" style="--hover-c:#ff6a00;--hover-bg:rgba(255,106,0,0.04)" onclick="window.location.href='game.html'">
-      <span class="mc-badge" style="background:rgba(255,106,0,0.15);color:#ff9500;border:1px solid rgba(255,106,0,0.35)">🌆 ШИНЭ GTA</span>
-      <div class="mc-icon">🏙️</div>
-      <div class="mc-title">УБ Хот — Нээлттэй Дэлхий</div>
-      <div class="mc-desc">Улаанбаатарын нээлттэй хот. AI машин, цагдаа, торгууль, гэрлэн дохио. Бодит жолоодлого!</div>
+
+  <!-- Brand header -->
+  <div class="menu-brand">
+    <div class="logo-mark">SMART<span>DRIVER</span></div>
+    <div class="menu-brand-tag">Монгол улс — Жолоочийн үнэмлэхний бэлтгэлийн платформ</div>
+  </div>
+
+  <!-- Hero -->
+  <div class="menu-hero">
+    <p class="menu-hero-line">Жолоочийн шалгалтад бэлдэх хамгийн хурдан арга</p>
+    <div class="menu-hero-pills">
+      <span class="hero-pill">800+ асуулт</span>
+      <span class="hero-pill">40 карт</span>
+      <span class="hero-pill">Дадлага симулятор</span>
+      <span class="hero-pill">Шалгалтын горим</span>
     </div>
   </div>
+
+  <!-- Section: Дүрмийн тест -->
+  <div class="menu-section">
+    <div class="menu-section-hdr">
+      <span class="menu-section-icon">📖</span>
+      <span class="menu-section-title">Дүрмийн тест</span>
+      <span class="menu-section-sub">Асуулт, хариулт, тайлбар</span>
+    </div>
+    <div class="menu-modes">
+      <div class="mode-card" style="--hover-c:#ef4444;--hover-bg:rgba(239,68,68,0.04)" onclick="showHot20()">
+        <span class="mc-badge badge-hot">🔥 БАЙНГА ГАРДАГ</span>
+        <div class="mc-icon">🎯</div>
+        <div class="mc-title">Түгээмэл 20 Асуулт</div>
+        <div class="mc-desc">Шалгалтанд хамгийн их давтагддаг асуултууд. Эхлэх цэг болно.</div>
+      </div>
+      <div class="mode-card" style="--hover-c:#22c55e;--hover-bg:rgba(34,197,94,0.04)" onclick="startRandomQuiz()">
+        <span class="mc-badge badge-new">ДАДЛАГА</span>
+        <div class="mc-icon">🎲</div>
+        <div class="mc-title">Санамсаргүй Тест</div>
+        <div class="mc-desc">40 картаас санамсаргүй 20 асуулт. Тайлбар, зураг бүхий дадлага.</div>
+      </div>
+      <div class="mode-card" style="--hover-c:#3b82f6;--hover-bg:rgba(59,130,246,0.04)" onclick="showCardSelect()">
+        <span class="mc-badge badge-all">1–40 КАРТ</span>
+        <div class="mc-icon">📋</div>
+        <div class="mc-title">Картаар Сонгох</div>
+        <div class="mc-desc">40 карт бүрийг дангаар нь үзэж дадлага хийх. 20 асуулт тус бүр.</div>
+      </div>
+      <div class="mode-card" style="--hover-c:#f59e0b;--hover-bg:rgba(245,158,11,0.04)" onclick="startExamMode()">
+        <span class="mc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">⏱ ШАЛГАЛТ</span>
+        <div class="mc-icon">📝</div>
+        <div class="mc-title">Шалгалтын Горим</div>
+        <div class="mc-desc">Бодит шалгалтыг дуурайсан горим. 20 асуулт, тайлбаргүй, хугацаатай.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: Дадлага симулятор -->
+  <div class="menu-section">
+    <div class="menu-section-hdr">
+      <span class="menu-section-icon">🚗</span>
+      <span class="menu-section-title">Дадлага Симулятор</span>
+      <span class="menu-section-sub">WASD товч · бодит жолоодлого</span>
+    </div>
+    <div class="menu-modes">
+      <div class="mode-card" style="--hover-c:#a855f7;--hover-bg:rgba(168,85,247,0.04)" onclick="showSimulator()">
+        <span class="mc-badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3)">6 СЦЕНАРИ</span>
+        <div class="mc-icon">🚦</div>
+        <div class="mc-title">Сценарийн Дадлага</div>
+        <div class="mc-desc">Гэрлэн дохио, явган хүний гарц, мөс, бусад. Зөрчил хийвэл оноо хасна.</div>
+      </div>
+      <div class="mode-card" style="--hover-c:#ff6a00;--hover-bg:rgba(255,106,0,0.04)" onclick="window.location.href='game.html'">
+        <span class="mc-badge" style="background:rgba(255,106,0,0.15);color:#ff9500;border:1px solid rgba(255,106,0,0.35)">НЭЭЛТТЭЙ ХОТ</span>
+        <div class="mc-icon">🏙️</div>
+        <div class="mc-title">УБ Хот — Чөлөөт Жолоодлого</div>
+        <div class="mc-desc">Улаанбаатарын map дээр чөлөөтэй явах. AI машин, цагдаа, торгуулийн систем.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-item"><div class="stat-n">40</div><div class="stat-l">Карт</div></div>
     <div class="stat-item"><div class="stat-n">800</div><div class="stat-l">Асуулт</div></div>
     <div class="stat-item"><div class="stat-n">6</div><div class="stat-l">Сценари</div></div>
-    <div class="stat-item"><div class="stat-n">1</div><div class="stat-l">Нээлттэй хот</div></div>
     <div class="stat-item"><div class="stat-n" id="menu-done">0</div><div class="stat-l">Тест өгсөн</div></div>
   </div>
-  <div style="margin-top:1.5rem;font-family:var(--font-m);font-size:0.65rem;color:rgba(240,238,234,0.2);letter-spacing:0.1em">
-    Тест: А Б В Г товч · Дараагийн: Space/Enter · Симулятор: WASD / ← ↑ ↓ →
-  </div>
+  <div class="menu-keyhelp">Тест: А Б В Г товч &nbsp;·&nbsp; Дараагийн: Space/Enter &nbsp;·&nbsp; Симулятор: WASD</div>
 </div>
 
 <!-- ══════════ CARD SELECT ══════════ -->

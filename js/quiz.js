@@ -124,30 +124,27 @@ function renderQuestion() {
   document.getElementById('q-counter').textContent = `${quizState.current+1}/${total}`;
 
   const isHot = q.opts !== undefined;
-  const opts = isHot ? q.opts : [
-    `${q.qNum}-р асуулт: А хариулт`,
-    `${q.qNum}-р асуулт: Б хариулт`,
-    `${q.qNum}-р асуулт: В хариулт`,
-    `${q.qNum}-р асуулт: Г хариулт`
-  ];
-  const labels = ['А','Б','В','Г','Д'];
+  const opts = isHot ? q.opts : ['А хариулт','Б хариулт','В хариулт','Г хариулт'];
+  const labels = ['А','Б','В','Г'];
 
-  const imgIdA = `qi-${quizState.current}-a`;
-  const imgIdB = `qi-${quizState.current}-b`;
+  // Show only the relevant image page: А (questions 1-10) or Б (questions 11-20)
+  const isPageA = q.qNum <= 10;
+  const imgSrc = isPageA ? q.imgA : q.imgB;
+  const imgId = `qi-${quizState.current}`;
+  const pageLabel = isPageA ? 'А ХЭСЭГ' : 'Б ХЭСЭГ';
+
   let imgHtml = '';
   if (q.isImageBased) {
     imgHtml = `
-      <div class="q-images two-img" id="q-img-wrap">
-        <div class="q-img-wrap" style="position:relative;background:#111;min-height:120px;display:flex;align-items:center;justify-content:center">
-          <img id="${imgIdA}" class="q-img" src="" onclick="zoomImg(this.src)" alt="Карт ${q.cardNum}а">
-          <div class="img-loading" id="load-${imgIdA}">⏳ Ачааллаж байна...</div>
+      <div class="q-images one-img">
+        <div style="position:relative;background:#07070e;min-height:100px;display:flex;align-items:center;justify-content:center;border-radius:3px 3px 0 0">
+          <img id="${imgId}" class="q-img" src="" onclick="zoomImg(this.src)"
+               alt="Карт ${q.cardNum} — ${pageLabel}"
+               style="max-height:54vh;opacity:0;transition:opacity .35s;cursor:zoom-in">
+          <div class="img-loading" id="load-${imgId}">⏳ Зураг ачааллаж байна...</div>
         </div>
-        <div class="q-img-wrap" style="position:relative;background:#111;min-height:120px;display:flex;align-items:center;justify-content:center">
-          <img id="${imgIdB}" class="q-img" src="" onclick="zoomImg(this.src)" alt="Карт ${q.cardNum}б">
-          <div class="img-loading" id="load-${imgIdB}">⏳ Ачааллаж байна...</div>
-        </div>
-      </div>
-    `;
+        <div class="q-img-hint">🔍 Зургийг дарж томруулах</div>
+      </div>`;
   }
 
   const alreadyAnswered = quizState.answers[quizState.current] !== null;
@@ -169,8 +166,8 @@ function renderQuestion() {
   if (alreadyAnswered) {
     const ok = quizState.answers[quizState.current] === q.ans;
     const why = isHot ? (q.why || '') : (ok
-      ? `✓ Зөв! ${labels[q.ans]} хариулт зөв байна.`
-      : `Зөв хариулт: ${labels[q.ans]}. Картыг дахин анхааралтай харна уу.`);
+      ? `✓ Зөв! "${labels[q.ans]}" хариулт зөв байна.`
+      : `Зөв хариулт: "${labels[q.ans]}". Картын ${pageLabel}-ийн ${q.qNum}-р асуултыг дахин анхааралтай харна уу.`);
     explHtml = `<div class="q-explain show" style="${ok
       ? '--explain-c:var(--green);--explain-bg:rgba(34,197,94,0.06)'
       : '--explain-c:var(--red);--explain-bg:rgba(239,68,68,0.06)'}">
@@ -180,12 +177,11 @@ function renderQuestion() {
 
   const qText = isHot
     ? q.text
-    : `<strong>Карт ${q.cardNum}</strong> — Зургийг харж <strong>${q.qNum}-р асуулт</strong>-ын зөв хариултыг сонгоно уу.`;
+    : `Карт ${q.cardNum} — <strong>${pageLabel}</strong> зургаас <strong>${q.qNum}-р асуулт</strong>-ын зөв хариулт сонгоно уу.`;
 
   document.getElementById('q-wrap').innerHTML = `
-    <div class="q-card-label">📋 Карт #${q.cardNum} &nbsp;·&nbsp; Асуулт ${q.qNum} / 20</div>
+    <div class="q-card-label">КАРТ #${q.cardNum} &nbsp;·&nbsp; АСУУЛТ ${q.qNum} / 20 &nbsp;·&nbsp; ${pageLabel}</div>
     ${imgHtml}
-    <div class="q-number-badge">Q${quizState.current+1}</div>
     <div class="q-text">${qText}</div>
     <div class="q-options">${optsHtml}</div>
     ${explHtml}
@@ -201,19 +197,12 @@ function renderQuestion() {
 
   if (q.isImageBased) {
     requestAnimationFrame(() => {
-      const elA = document.getElementById(imgIdA);
-      const elB = document.getElementById(imgIdB);
-      const loadA = document.getElementById('load-'+imgIdA);
-      const loadB = document.getElementById('load-'+imgIdB);
-      if (elA) {
-        elA.onload = () => { if(loadA) loadA.style.display='none'; elA.style.opacity='1'; };
-        elA.onerror = null;
-        loadImgWithFallback(elA, q.imgA);
-      }
-      if (elB) {
-        elB.onload = () => { if(loadB) loadB.style.display='none'; elB.style.opacity='1'; };
-        elB.onerror = null;
-        loadImgWithFallback(elB, q.imgB);
+      const el = document.getElementById(imgId);
+      const load = document.getElementById('load-'+imgId);
+      if (el) {
+        el.onload = () => { if(load) load.style.display='none'; el.style.opacity='1'; };
+        el.onerror = null;
+        loadImgWithFallback(el, imgSrc);
       }
     });
   }
