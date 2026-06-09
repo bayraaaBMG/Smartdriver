@@ -57,7 +57,29 @@ var CAR_COLORS = [
   '#c0392b','#2980b9','#27ae60','#8e44ad','#d35400',
   '#16a085','#2c3e50','#e74c3c','#1abc9c','#f39c12',
   '#95a5a6','#3498db','#9b59b6','#e67e22','#bdc3c7',
+  '#ecf0f1','#7f8c8d','#c8c8c8','#a93226','#1a5276',
 ];
+
+// ── Vehicle type system ───────────────────────────────────────
+var VEHICLE_TYPES = [
+  {type:'sedan', w:18, h:32, freq:6},
+  {type:'suv',   w:22, h:37, freq:3},
+  {type:'van',   w:21, h:42, freq:2},
+  {type:'bus',   w:27, h:56, freq:1},
+  {type:'mini',  w:15, h:26, freq:2},
+  {type:'taxi',  w:18, h:33, freq:2},
+];
+
+function _pickVType() {
+  var total=0;
+  VEHICLE_TYPES.forEach(function(t){total+=t.freq;});
+  var r=Math.random()*total;
+  for (var i=0;i<VEHICLE_TYPES.length;i++){
+    r-=VEHICLE_TYPES[i].freq;
+    if (r<=0) return VEHICLE_TYPES[i];
+  }
+  return VEHICLE_TYPES[0];
+}
 
 // ── AI Car ────────────────────────────────────────────────────
 var AICar = (function() {
@@ -66,13 +88,26 @@ var AICar = (function() {
     this.dir      = dir;       // 1 forward, -1 backward
     this.laneIdx  = laneIdx;
     this.progress = progress;  // 0..1 along road
-    this.color    = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     this.speed    = 0;
     this.maxSp    = (1.5 + Math.random() * 1.8) * dir; // ~1.5-3.3 px/frame
     this.followGap = 38 + Math.random() * 22;
-    this.w = 19; this.h = 33;
     this.active  = true;
     this.waiting = false;
+
+    var vt = _pickVType();
+    this.vtype = vt.type;
+    this.w = vt.w;
+    this.h = vt.h;
+
+    if (this.vtype === 'bus') {
+      this.color = Math.random()>0.5 ? '#1a5276' : '#154360';
+      this.maxSp *= 0.75; // buses are slower
+    } else if (this.vtype === 'taxi') {
+      this.color = '#f1c40f';
+    } else {
+      this.color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
+    }
+
     this._setPos();
   }
 

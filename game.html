@@ -16,172 +16,178 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0f;font-family:
   align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 40%,#120a18 0%,#0a0a0f 70%);
 }
-.gm-logo{
-  font-family:Raleway,sans-serif;font-weight:900;font-size:3.2rem;letter-spacing:.04em;
-  background:linear-gradient(90deg,#ff6a00,#ff9500);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  margin-bottom:.25rem;
-}
+.gm-logo{font-family:Raleway,sans-serif;font-weight:900;font-size:3.2rem;letter-spacing:.04em;background:linear-gradient(90deg,#ff6a00,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem}
 .gm-tagline{color:rgba(240,238,234,.35);font-size:.7rem;letter-spacing:.2em;margin-bottom:.4rem}
 .gm-version{color:rgba(255,106,0,.4);font-size:.6rem;letter-spacing:.1em;margin-bottom:2.2rem}
 .gm-modes{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem;max-width:580px;width:90%}
-.gm-btn{
-  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;padding:1.3rem 1.1rem;cursor:pointer;transition:.2s;text-align:left;
-}
+.gm-btn{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.3rem 1.1rem;cursor:pointer;transition:.2s;text-align:left}
 .gm-btn:hover{border-color:#ff6a00;background:rgba(255,106,0,.05);transform:translateY(-2px)}
 .gm-btn-icon{font-size:1.8rem;margin-bottom:.5rem}
 .gm-btn-title{font-family:Raleway,sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.3rem;color:#f0eeea}
 .gm-btn-desc{font-size:.64rem;color:rgba(240,238,234,.35);line-height:1.55}
-.gm-controls{
-  margin-top:1.8rem;padding:.75rem 1.3rem;
-  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:10px;
-  display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;
-}
+.gm-controls{margin-top:1.8rem;padding:.75rem 1.3rem;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:10px;display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center}
 .gm-key{font-size:.65rem;color:rgba(240,238,234,.38)}
-.gm-key kbd{
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
-  border-radius:4px;padding:1px 5px;color:#f0eeea;font-family:inherit;font-size:.68rem;
-}
+.gm-key kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:1px 5px;color:#f0eeea;font-family:inherit;font-size:.68rem}
 .gm-back{margin-top:1.1rem;color:rgba(240,238,234,.22);font-size:.68rem;cursor:pointer}
 .gm-back:hover{color:#ff6a00}
 
-/* ── HUD TOP BAR ── */
-#game-hud{position:fixed;top:0;left:0;right:0;z-index:50;display:none;pointer-events:none}
+/* ═══════════════════════════════════════════════════════════
+   NAVIGATION SIMULATOR HUD
+═══════════════════════════════════════════════════════════ */
+
+/* HUD container — covers full viewport, shown/hidden as unit */
+#game-hud{position:fixed;inset:0;z-index:50;display:none;pointer-events:none}
+
+/* ── Info panel (top-left) — navigation app style ── */
 .hud-bar{
-  display:flex;align-items:center;gap:.65rem;padding:.5rem .85rem;
-  background:linear-gradient(to bottom,rgba(6,6,12,.92) 55%,transparent);
+  position:absolute;top:12px;left:12px;
+  background:rgba(8,8,18,0.90);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px;
+  padding:.65rem 1rem;
+  display:flex;flex-direction:column;gap:.3rem;
+  min-width:192px;max-width:218px;
+  box-shadow:0 4px 28px rgba(0,0,0,0.55);
+}
+.hud-city{
+  display:flex;align-items:center;gap:.38rem;
+  font-family:Raleway,sans-serif;font-weight:900;font-size:.82rem;
+  color:#f0eeea;letter-spacing:.02em;
 }
 .hud-pill{
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
-  border-radius:7px;padding:.26rem .6rem;font-size:.7rem;white-space:nowrap;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:6px;padding:.2rem .5rem;font-size:.65rem;white-space:nowrap;
 }
-.hud-pill.accent{color:#ff6a00;font-weight:700;letter-spacing:.08em}
-.hud-pill.money{color:#22c55e;font-weight:700}
-.hud-pill.road{color:rgba(240,238,234,.62);font-size:.64rem;max-width:175px;overflow:hidden;text-overflow:ellipsis}
+.hud-pill.road{
+  background:none;border:none;padding:.05rem 0;
+  color:rgba(240,238,234,.45);font-size:.63rem;
+  overflow:hidden;text-overflow:ellipsis;max-width:196px;
+  display:block;
+}
+.hud-pill.accent{color:#ff6a00;font-weight:700;letter-spacing:.06em;border-color:rgba(255,106,0,.2)}
+.hud-pill.money{color:#22c55e;font-weight:700;border-color:rgba(34,197,94,.2)}
+.hud-meta{display:flex;align-items:center;gap:.3rem;flex-wrap:wrap}
+.hud-timechip{font-size:.63rem;color:rgba(240,238,234,.38)}
+
+/* ── Right-top cluster (speed limit + wanted + ESC) ── */
+.hud-right-top{
+  position:absolute;top:12px;right:12px;
+  display:flex;flex-direction:column;align-items:flex-end;gap:.45rem;
+  pointer-events:all;
+}
 .spd-limit{
-  width:30px;height:30px;border-radius:50%;border:2.5px solid #888;
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid #888;
+  background:rgba(8,8,18,0.88);
   display:flex;align-items:center;justify-content:center;
-  font-size:.66rem;font-weight:700;transition:.3s;
+  font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;
+  color:#f0eeea;transition:.3s;
+  box-shadow:0 2px 14px rgba(0,0,0,0.45);
 }
 #hud-wanted{display:flex;gap:2px}
 .star{font-size:.72rem;filter:grayscale(1);opacity:.2;transition:.3s}
 .star.lit{filter:drop-shadow(0 0 4px #fbbf24);opacity:1}
-.hud-esc{pointer-events:all;cursor:pointer;color:rgba(240,238,234,.38);font-size:.62rem}
-.hud-esc:hover{color:#ff6a00}
+.hud-esc{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+  border-radius:8px;padding:.24rem .5rem;
+  color:rgba(240,238,234,.38);font-size:.57rem;cursor:pointer;transition:.2s;
+}
+.hud-esc:hover{color:#ff6a00;border-color:rgba(255,106,0,.3)}
 
-/* ── HEALTH BAR ── */
+/* ── Health bar (bottom-left, above speedometer) ── */
 #hud-health{
-  position:fixed;top:42px;left:.85rem;z-index:50;display:none;pointer-events:none;width:115px;
+  position:fixed;bottom:210px;left:14px;z-index:50;display:none;pointer-events:none;
+  width:132px;
+  background:rgba(8,8,18,0.82);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:8px;padding:.38rem .6rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.4);
 }
-.hp-label{font-size:.52rem;color:rgba(240,238,234,.28);letter-spacing:.1em;margin-bottom:2px}
-.hp-bar{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
-.hp-fill{height:100%;width:100%;background:#22c55e;border-radius:3px;transition:width .3s,background .3s}
+.hp-label{font-size:.48rem;color:rgba(240,238,234,.25);letter-spacing:.1em;margin-bottom:3px}
+.hp-bar{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.hp-fill{height:100%;width:100%;background:#22c55e;border-radius:2px;transition:width .3s,background .3s}
 
-/* ── SPEEDOMETER ── */
+/* ── Speedometer (bottom-left) ── */
 #hud-speed-wrap{
-  position:fixed;bottom:70px;right:14px;z-index:50;display:none;
-  pointer-events:none;width:108px;height:108px;
+  position:fixed;bottom:68px;left:14px;z-index:50;display:none;pointer-events:none;
+  width:132px;height:132px;
 }
-canvas#spd-canvas{position:absolute;top:0;left:0;width:108px;height:108px;z-index:0}
+canvas#spd-canvas{position:absolute;top:0;left:0;width:132px;height:132px;z-index:0}
 .spd-outer{
-  position:relative;
-  width:108px;height:108px;
-  background:rgba(8,8,14,.88);border:1px solid rgba(255,106,0,.28);border-radius:50%;
+  position:relative;width:132px;height:132px;
+  background:rgba(6,6,14,.94);
+  border:1.5px solid rgba(255,255,255,.10);
+  border-radius:50%;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  box-shadow:0 0 22px rgba(0,0,0,.55);
+  box-shadow:0 0 32px rgba(0,0,0,.65),inset 0 0 20px rgba(0,0,0,.25);
 }
-.spd-num{font-size:1.85rem;font-weight:700;line-height:1;color:#f0eeea;position:relative;z-index:1}
-.spd-unit{font-size:.5rem;color:rgba(240,238,234,.3);letter-spacing:.1em;position:relative;z-index:1}
-.spd-gear{font-size:.65rem;color:#ff6a00;font-weight:700;margin-top:3px;position:relative;z-index:1}
+.spd-num{font-size:2.1rem;font-weight:900;line-height:1;color:#f0eeea;position:relative;z-index:1;letter-spacing:-.02em}
+.spd-unit{font-size:.44rem;color:rgba(240,238,234,.26);letter-spacing:.12em;margin-top:1px;position:relative;z-index:1}
+.spd-gear{font-size:.62rem;color:#ff6a00;font-weight:700;margin-top:5px;position:relative;z-index:1;letter-spacing:.04em}
 
-/* ── MINIMAP ── */
-#game-minimap{position:fixed;top:42px;right:12px;z-index:50;display:none;pointer-events:none}
+/* ── Minimap (bottom-right) ── */
+#game-minimap{position:fixed;bottom:14px;right:14px;z-index:50;display:none;pointer-events:none}
 .mm-frame{
-  width:144px;height:110px;overflow:hidden;position:relative;
-  background:rgba(6,6,12,.88);border:1px solid rgba(255,106,0,.2);border-radius:6px;
+  width:150px;height:115px;overflow:hidden;position:relative;
+  background:rgba(6,6,12,.90);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  box-shadow:0 4px 22px rgba(0,0,0,.55);
 }
-.mm-label{
-  position:absolute;bottom:2px;left:0;right:0;
-  font-size:.48rem;color:rgba(240,238,234,.28);text-align:center;letter-spacing:.08em;
-}
+.mm-label{position:absolute;bottom:3px;left:0;right:0;font-size:.43rem;color:rgba(240,238,234,.22);text-align:center;letter-spacing:.08em}
 
-/* ── VIOLATION LOG ── */
-#viol-log{position:fixed;bottom:70px;left:12px;z-index:50;display:none;pointer-events:none;max-width:276px}
+/* ── Violation log (top-left, below info panel) ── */
+#viol-log{
+  position:fixed;top:148px;left:14px;z-index:50;display:none;pointer-events:none;
+  max-width:236px;
+}
 .vl-item{
-  background:rgba(8,8,14,.9);border-left:3px solid #ef4444;border-radius:0 6px 6px 0;
-  padding:.32rem .6rem;margin-bottom:.28rem;font-size:.64rem;line-height:1.5;
-  animation:slideIn .25s ease;
+  background:rgba(8,8,16,.92);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;
+  padding:.3rem .62rem;margin-bottom:.24rem;font-size:.62rem;line-height:1.5;
+  animation:slideIn .22s ease;
+  box-shadow:0 2px 12px rgba(0,0,0,.45);
 }
 @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 
-/* ── TASK HUD ── */
-#hud-task{position:fixed;top:88px;right:12px;z-index:50;display:none;pointer-events:none}
+/* ── Task HUD (top-right, below minimap) ── */
+#hud-task{position:fixed;top:112px;right:14px;z-index:50;display:none;pointer-events:none}
 .ht-box{
-  background:rgba(6,6,12,.9);border:1px solid rgba(255,106,0,.22);border-radius:8px;
-  padding:.5rem .8rem;max-width:196px;
+  background:rgba(8,8,18,.90);
+  border:1px solid rgba(255,106,0,.18);
+  border-radius:10px;
+  padding:.55rem .85rem;max-width:200px;
+  box-shadow:0 4px 20px rgba(0,0,0,.45);
 }
-.ht-lbl{font-size:.52rem;color:#ff6a00;letter-spacing:.12em;margin-bottom:.18rem}
-.ht-txt{font-size:.7rem;line-height:1.45}
+.ht-lbl{font-size:.5rem;color:#ff6a00;letter-spacing:.14em;margin-bottom:.18rem;text-transform:uppercase}
+.ht-txt{font-size:.7rem;line-height:1.45;color:rgba(240,238,234,.82)}
 
-/* ── POLICE DIALOG ── */
-#game-police-dialog{
-  position:fixed;inset:0;z-index:90;display:none;
-  align-items:center;justify-content:center;background:rgba(0,0,0,.72);
-}
-.gpd-box{
-  background:#0d0d18;border:1px solid rgba(255,106,0,.22);border-radius:16px;
-  padding:2rem 1.8rem;max-width:380px;width:92%;text-align:center;
-}
+/* ── Police dialog ── */
+#game-police-dialog{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72)}
+.gpd-box{background:#0d0d18;border:1px solid rgba(255,106,0,.22);border-radius:16px;padding:2rem 1.8rem;max-width:380px;width:92%;text-align:center}
 .gpd-icon{font-size:2.8rem;margin-bottom:.7rem}
 .gpd-title{font-family:Raleway,sans-serif;font-weight:900;font-size:1.2rem;margin-bottom:.45rem}
 .gpd-sub{color:rgba(240,238,234,.42);font-size:.76rem;line-height:1.65;margin-bottom:1rem}
-.gpd-fine-box{
-  background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);
-  border-radius:8px;padding:.7rem;margin-bottom:1rem;
-}
+.gpd-fine-box{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:8px;padding:.7rem;margin-bottom:1rem}
 .gpd-fine-lbl{font-size:.6rem;color:rgba(240,238,234,.32);margin-bottom:.22rem}
 #gpd-fine{font-family:Raleway,sans-serif;font-weight:900;font-size:1.65rem;color:#ef4444}
 .gpd-btns{display:flex;gap:.65rem;justify-content:center}
-.gpd-btn{
-  border:none;border-radius:8px;padding:.62rem 1.2rem;
-  font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;font-size:.76rem;
-}
+.gpd-btn{border:none;border-radius:8px;padding:.62rem 1.2rem;font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;font-size:.76rem}
 .gpd-btn.pay{background:linear-gradient(90deg,#ff6a00,#ff9500);color:#fff}
 .gpd-btn.skip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#f0eeea}
 
-/* ── PAUSE ── */
-#game-pause{
-  position:fixed;inset:0;z-index:85;display:none;
-  align-items:center;justify-content:center;background:rgba(0,0,0,.65);
-}
-.gp-box{
-  background:#0d0d18;border:1px solid rgba(255,255,255,.07);border-radius:16px;
-  padding:2rem;text-align:center;min-width:276px;
-}
+/* ── Pause ── */
+#game-pause{position:fixed;inset:0;z-index:85;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65)}
+.gp-box{background:#0d0d18;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:2rem;text-align:center;min-width:276px}
 .gp-title{font-family:Raleway,sans-serif;font-weight:900;font-size:1.35rem;margin-bottom:1.3rem}
-.gp-btn{
-  display:block;width:100%;background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.72rem;
-  color:#f0eeea;font-family:'JetBrains Mono',monospace;font-size:.8rem;
-  cursor:pointer;margin-bottom:.5rem;transition:.2s;
-}
+.gp-btn{display:block;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.72rem;color:#f0eeea;font-family:'JetBrains Mono',monospace;font-size:.8rem;cursor:pointer;margin-bottom:.5rem;transition:.2s}
 .gp-btn:hover{border-color:#ff6a00;color:#ff6a00}
 .gp-btn.danger{border-color:rgba(239,68,68,.28);color:#ef4444}
 
-/* ── MOBILE CONTROLS ── */
-#mob-game-ctrl{
-  position:fixed;bottom:0;left:0;right:0;z-index:50;display:none;
-  padding:.4rem .4rem .5rem;background:rgba(6,6,12,.82);
-  border-top:1px solid rgba(255,255,255,.055);
-}
+/* ── Mobile controls ── */
+#mob-game-ctrl{position:fixed;bottom:0;left:0;right:0;z-index:55;display:none;padding:.4rem .4rem .5rem;background:rgba(6,6,12,.82);border-top:1px solid rgba(255,255,255,.055)}
 .mgc-row{display:flex;justify-content:center;gap:.32rem;margin-bottom:.28rem}
-.mgc-btn{
-  width:54px;height:54px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
-  border-radius:10px;font-size:1.05rem;color:#f0eeea;cursor:pointer;user-select:none;
-  display:flex;align-items:center;justify-content:center;
-  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .08s,border-color .08s;
-}
+.mgc-btn{width:54px;height:54px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:10px;font-size:1.05rem;color:#f0eeea;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .08s,border-color .08s}
+.mgc-spacer{width:54px}.mgc-flex{flex:1}
 .mgc-btn:active,.mgc-btn.pressed{background:rgba(255,106,0,.3);border-color:#ff6a00}
 </style>
 </head>
@@ -192,7 +198,7 @@ canvas#spd-canvas{position:absolute;top:0;left:0;width:108px;height:108px;z-inde
 <div id="game-menu">
   <div class="gm-logo">SMARTDRIVER</div>
   <div class="gm-tagline">// УЛААНБААТАР · БОДИТ ЖОЛООДЛОГЫН SIMULATOR</div>
-  <div class="gm-version">v2.0 — Сүхбаатарын талбай орчим · AI Traffic · Police System</div>
+  <div class="gm-version">v2.1 — Сүхбаатарын талбай орчим · AI Traffic · Police System</div>
   <div class="gm-modes">
     <div class="gm-btn" onclick="startGame('free')">
       <div class="gm-btn-icon">🚗</div>
@@ -227,49 +233,58 @@ canvas#spd-canvas{position:absolute;top:0;left:0;width:108px;height:108px;z-inde
   <div class="gm-back" onclick="window.location.href='index.html'">← Үндсэн цэс рүү буцах</div>
 </div>
 
-<!-- HUD -->
+<!-- ═══ NAVIGATION HUD ═══ -->
 <div id="game-hud">
+  <!-- Info panel — top-left (city, road, mode, money, time) -->
   <div class="hud-bar">
-    <div class="hud-pill accent" id="hud-mode-lbl">ЧӨЛӨӨТ</div>
-    <div class="hud-pill money" id="hud-money">₮500,000</div>
-    <div class="hud-pill" id="hud-time">08:00</div>
+    <div class="hud-city">🏙 Улаанбаатар Хот</div>
     <div class="hud-pill road" id="hud-road">—</div>
-    <div class="hud-pill" style="display:flex;align-items:center;gap:5px">
-      <div class="spd-limit" id="hud-spd-limit">60</div>
+    <div class="hud-meta">
+      <div class="hud-pill accent" id="hud-mode-lbl">ЧӨЛӨӨТ</div>
+      <div class="hud-pill money" id="hud-money">₮500,000</div>
+      <span class="hud-timechip" id="hud-time">08:00</span>
     </div>
-    <div class="hud-pill" id="hud-wanted">
+  </div>
+  <!-- Right cluster — speed limit sign + wanted stars + ESC -->
+  <div class="hud-right-top">
+    <div class="spd-limit" id="hud-spd-limit">60</div>
+    <div id="hud-wanted">
       <span class="star" id="s1">⭐</span>
       <span class="star" id="s2">⭐</span>
       <span class="star" id="s3">⭐</span>
     </div>
-    <div style="flex:1"></div>
     <div class="hud-esc" onclick="togglePause()">⏸ ESC</div>
   </div>
 </div>
 
+<!-- Health bar (above speedometer, bottom-left) -->
 <div id="hud-health">
   <div class="hp-label">МАШИНЫ БАЙДАЛ</div>
   <div class="hp-bar"><div class="hp-fill"></div></div>
 </div>
 
+<!-- Speedometer (bottom-left) -->
 <div id="hud-speed-wrap">
   <div class="spd-outer">
-    <canvas id="spd-canvas" width="108" height="108"></canvas>
+    <canvas id="spd-canvas" width="132" height="132"></canvas>
     <div class="spd-num" id="hud-spd">0</div>
     <div class="spd-unit">КМ/ЦАГ</div>
     <div class="spd-gear" id="hud-gear">N</div>
   </div>
 </div>
 
+<!-- Minimap (bottom-right) -->
 <div id="game-minimap">
   <div class="mm-frame">
-    <canvas id="mm-canvas" width="144" height="110"></canvas>
+    <canvas id="mm-canvas" width="150" height="115"></canvas>
     <div class="mm-label">Улаанбаатар хот</div>
   </div>
 </div>
 
+<!-- Violation log (below info panel, left) -->
 <div id="viol-log"></div>
 
+<!-- Task panel (top-right, below right cluster) -->
 <div id="hud-task">
   <div class="ht-box">
     <div class="ht-lbl">ДААЛГАВАР</div>
@@ -308,22 +323,22 @@ canvas#spd-canvas{position:absolute;top:0;left:0;width:108px;height:108px;z-inde
 <!-- MOBILE CONTROLS -->
 <div id="mob-game-ctrl">
   <div class="mgc-row">
-    <div style="width:54px"></div>
-    <button class="mgc-btn"
+    <div class="mgc-spacer"></div>
+    <button type="button" class="mgc-btn"
       ontouchstart="gKeys['ArrowUp']=true;this.classList.add('pressed')"
       ontouchend="gKeys['ArrowUp']=false;this.classList.remove('pressed')">▲</button>
-    <div style="flex:1"></div>
-    <button class="mgc-btn" ontouchstart="gKeys['h']=true" ontouchend="gKeys['h']=false">📯</button>
-    <button class="mgc-btn" onclick="togglePause()">⏸</button>
+    <div class="mgc-flex"></div>
+    <button type="button" class="mgc-btn" ontouchstart="gKeys['h']=true" ontouchend="gKeys['h']=false">📯</button>
+    <button type="button" class="mgc-btn" onclick="togglePause()">⏸</button>
   </div>
   <div class="mgc-row">
-    <button class="mgc-btn"
+    <button type="button" class="mgc-btn"
       ontouchstart="gKeys['ArrowLeft']=true;this.classList.add('pressed')"
       ontouchend="gKeys['ArrowLeft']=false;this.classList.remove('pressed')">◀</button>
-    <button class="mgc-btn"
+    <button type="button" class="mgc-btn"
       ontouchstart="gKeys['ArrowDown']=true;this.classList.add('pressed')"
       ontouchend="gKeys['ArrowDown']=false;this.classList.remove('pressed')">▼</button>
-    <button class="mgc-btn"
+    <button type="button" class="mgc-btn"
       ontouchstart="gKeys['ArrowRight']=true;this.classList.add('pressed')"
       ontouchend="gKeys['ArrowRight']=false;this.classList.remove('pressed')">▶</button>
   </div>

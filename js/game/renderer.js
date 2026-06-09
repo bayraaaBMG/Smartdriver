@@ -109,9 +109,18 @@ function rSpecialAreas(c) {
 // ── Buildings ─────────────────────────────────────────────────
 function rBuildings(c) {
   wBuildings.forEach(function(b) {
-    // Shadow
-    c.fillStyle='rgba(0,0,0,0.22)';
-    c.fillRect(b.x+4,b.y+5,b.w,b.h);
+    // Pseudo-3D: south face (depth illusion)
+    var wallH = Math.min(b.h * 0.12, 7);
+    c.fillStyle = _darken(b.col, 40);
+    c.fillRect(b.x, b.y+b.h, b.w, wallH);
+    // Pseudo-3D: east face
+    var wallW = Math.min(b.w * 0.08, 6);
+    c.fillStyle = _darken(b.col, 55);
+    c.fillRect(b.x+b.w, b.y+wallW*0.6, wallW, b.h+wallH-wallW*0.6);
+
+    // Shadow (shifted for depth feel)
+    c.fillStyle='rgba(0,0,0,0.18)';
+    c.fillRect(b.x+5,b.y+6,b.w,b.h);
 
     // Body
     c.fillStyle = b.col;
@@ -174,8 +183,8 @@ function rBuildings(c) {
 // ── Roads ─────────────────────────────────────────────────────
 var SW=14; // sidewalk width
 function rRoads(c) {
-  // Sidewalks
-  c.fillStyle='#7a7060';
+  // Sidewalks (warm sand/beige — UB concrete pavements)
+  c.fillStyle='#b4a078';
   wRoads.forEach(function(r) {
     if (r.horiz) {
       c.fillRect(r.x0,r.y0-SW,r.len,SW);
@@ -186,17 +195,51 @@ function rRoads(c) {
     }
   });
 
-  // Intersection boxes (asphalt)
-  c.fillStyle='#1a1a1e';
+  // Sidewalk kerb edge (thin dark line)
+  c.fillStyle='rgba(0,0,0,0.18)';
+  wRoads.forEach(function(r) {
+    if (r.horiz) {
+      c.fillRect(r.x0,r.y0-2,r.len,2);
+      c.fillRect(r.x0,r.y0+r.h,r.len,2);
+    } else {
+      c.fillRect(r.x0-2,r.y0,2,r.len);
+      c.fillRect(r.x0+r.w,r.y0,2,r.len);
+    }
+  });
+
+  // Intersection corner boxes (slightly darker than road surface)
+  c.fillStyle='#2e2e32';
   wInters.forEach(function(n) {
     c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
   });
 
-  // Road surfaces
-  c.fillStyle='#1e1e22';
+  // Road surfaces (medium dark gray asphalt)
+  c.fillStyle='#383838';
   wRoads.forEach(function(r) {
     if (r.horiz) c.fillRect(r.x0,r.y0,r.len,r.h);
     else         c.fillRect(r.x0,r.y0,r.w,r.len);
+  });
+
+  // Green medians on wide roads (lpd≥3 = Энхтайваны өргөн чөлөө)
+  c.fillStyle='#3a5a1c';
+  wRoads.forEach(function(r) {
+    if (r.lpd < 3) return;
+    var mw = 16;
+    if (r.horiz) c.fillRect(r.x0, r.yCen-mw/2, r.len, mw);
+    else         c.fillRect(r.xCen-mw/2, r.y0, mw, r.len);
+  });
+  // Median highlight (lighter strip along center)
+  c.fillStyle='rgba(80,140,40,0.35)';
+  wRoads.forEach(function(r) {
+    if (r.lpd < 3) return;
+    if (r.horiz) c.fillRect(r.x0, r.yCen-3, r.len, 6);
+    else         c.fillRect(r.xCen-3, r.y0, 6, r.len);
+  });
+
+  // Re-draw intersection area over medians for clean crossing
+  c.fillStyle='#2e2e32';
+  wInters.forEach(function(n) {
+    c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
   });
 }
 
@@ -291,32 +334,12 @@ function rMarkings(c) {
 function _hLine(c,x,y,len){ c.beginPath();c.moveTo(x,y);c.lineTo(x+len,y);c.stroke(); }
 function _vLine(c,x,y,len){ c.beginPath();c.moveTo(x,y);c.lineTo(x,y+len);c.stroke(); }
 
-// ── Box Junction (yellow diagonal hash inside intersections) ──
+// ── Box Junction (UB style: simple yellow border outline) ────
 function rBoxJunctions(c) {
+  c.strokeStyle='rgba(255,198,0,0.30)';
+  c.lineWidth=2; c.setLineDash([]);
   wInters.forEach(function(n) {
-    c.save();
-    c.beginPath();
-    c.rect(n.x-n.vw+1, n.y-n.hw+1, n.vw*2-2, n.hw*2-2);
-    c.clip();
-    c.strokeStyle='rgba(255,175,0,0.40)';
-    c.lineWidth=9; c.setLineDash([]);
-    var diag = Math.max(n.vw, n.hw)*3;
-    var step = 22;
-    // ↘ diagonals
-    for (var d=-diag; d<diag; d+=step) {
-      c.beginPath();
-      c.moveTo(n.x-n.vw+d, n.y-n.hw);
-      c.lineTo(n.x-n.vw+d+n.hw*2, n.y+n.hw);
-      c.stroke();
-    }
-    // ↙ diagonals
-    for (var d2=-diag; d2<diag; d2+=step) {
-      c.beginPath();
-      c.moveTo(n.x+n.vw-d2, n.y-n.hw);
-      c.lineTo(n.x+n.vw-d2-n.hw*2, n.y+n.hw);
-      c.stroke();
-    }
-    c.restore();
+    c.strokeRect(n.x-n.vw+2, n.y-n.hw+2, n.vw*2-4, n.hw*2-4);
   });
 }
 
@@ -330,19 +353,21 @@ function _drawRoadArrow(c, x, y, angle) {
   c.restore();
 }
 
-// ── Crosswalks ────────────────────────────────────────────────
+// ── Crosswalks (UB style: white zebra stripes) ───────────────
 function rCrosswalks(c) {
-  var stripe=9, gap=6, count=5;
+  var stripe=10, gap=7, count=5;
   wInters.forEach(function(n) {
     for (var i=0;i<count;i++) {
-      var off3 = 3+i*(stripe+gap);
-      // N/S crosswalks (above/below horizontal road) — orange
-      c.fillStyle='rgba(255,165,0,0.88)';
-      c.fillRect(n.x-n.vw, n.y-n.hw-off3, n.vw*2, stripe);
-      c.fillRect(n.x-n.vw, n.y+n.hw+off3, n.vw*2, stripe);
-      // E/W crosswalks (left/right of vertical road) — orange
-      c.fillRect(n.x-n.vw-off3, n.y-n.hw, stripe, n.hw*2);
-      c.fillRect(n.x+n.vw+off3, n.y-n.hw, stripe, n.hw*2);
+      var off = 4+i*(stripe+gap);
+      c.fillStyle='rgba(248,244,238,0.90)';
+      // N approach (above)
+      c.fillRect(n.x-n.vw, n.y-n.hw-off-stripe, n.vw*2, stripe);
+      // S approach (below)
+      c.fillRect(n.x-n.vw, n.y+n.hw+off, n.vw*2, stripe);
+      // W approach (left)
+      c.fillRect(n.x-n.vw-off-stripe, n.y-n.hw, stripe, n.hw*2);
+      // E approach (right)
+      c.fillRect(n.x+n.vw+off, n.y-n.hw, stripe, n.hw*2);
     }
   });
 }
@@ -462,81 +487,123 @@ function rPeds(c) {
   });
 }
 
-// ── Car drawing helper ────────────────────────────────────────
+// ── Car drawing helper (handles multiple vehicle types) ───────
 function _drawCar(c, car, bodyColor, darkColor, isPlayer) {
   c.save(); c.translate(car.x,car.y); c.rotate(car.angle);
   var bw=car.w, bh=car.h;
-  var r = isPlayer ? 4 : 3;
+  var vtype = car.vtype || 'sedan';
+  var cr = isPlayer ? 4 : (vtype==='bus'||vtype==='van' ? 2 : 3);
 
-  // Drop shadow
-  c.fillStyle='rgba(0,0,0,0.32)';
-  c.fillRect(-bw/2+5,-bh/2+7,bw,bh);
+  // Drop shadow (depth feel)
+  c.fillStyle='rgba(0,0,0,0.30)';
+  c.fillRect(-bw/2+4,-bh/2+6,bw+1,bh+1);
 
-  // Wheels — oval (tyre) with bright rim centre
-  var wxo=bw/2+1.5, wyf=-bh/2+7, wyr=bh/2-7, wra=3.5, wrb=4.8;
+  // ── Wheels ──────────────────────────────────────────────
+  var wxo = bw/2+1.5;
+  var wra = (vtype==='bus'||vtype==='suv') ? 4.2 : 3.5;
+  var wrb = (vtype==='bus') ? 6.5 : (vtype==='suv'||vtype==='van') ? 5.5 : 4.8;
+  var wyf = -bh/2 + (vtype==='bus' ? 12 : vtype==='van' ? 10 : 7);
+  var wyr =  bh/2 - (vtype==='bus' ? 12 : vtype==='van' ? 10 : 7);
+
   c.fillStyle='#111';
-  c.beginPath(); c.ellipse(-wxo, wyf, wra, wrb, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse( wxo, wyf, wra, wrb, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(-wxo, wyr, wra, wrb, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse( wxo, wyr, wra, wrb, 0, 0, Math.PI*2); c.fill();
-  c.fillStyle='rgba(175,175,175,0.48)'; // rim
-  c.beginPath(); c.ellipse(-wxo, wyf, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse( wxo, wyf, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse(-wxo, wyr, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse( wxo, wyr, wra*0.48, wrb*0.48, 0, 0, Math.PI*2); c.fill();
+  var _wheel = function(ox,oy){ c.beginPath();c.ellipse(ox,oy,wra,wrb,0,0,Math.PI*2);c.fill(); };
+  _wheel(-wxo,wyf); _wheel(wxo,wyf); _wheel(-wxo,wyr); _wheel(wxo,wyr);
+  // Bus: middle axle
+  if (vtype==='bus') { _wheel(-wxo,0); _wheel(wxo,0); }
 
-  // Side mirrors (small dark protrusion near front)
-  c.fillStyle=darkColor;
-  c.fillRect(-bw/2-3, -bh*0.17, 3, 4);
-  c.fillRect( bw/2,   -bh*0.17, 3, 4);
+  c.fillStyle='rgba(185,185,185,0.45)'; // rim highlight
+  var _rim = function(ox,oy){ c.beginPath();c.ellipse(ox,oy,wra*0.46,wrb*0.46,0,0,Math.PI*2);c.fill(); };
+  _rim(-wxo,wyf); _rim(wxo,wyf); _rim(-wxo,wyr); _rim(wxo,wyr);
+  if (vtype==='bus') { _rim(-wxo,0); _rim(wxo,0); }
 
-  // Body gradient
+  // ── Side mirrors ────────────────────────────────────────
+  if (vtype!=='bus') {
+    c.fillStyle=darkColor;
+    c.fillRect(-bw/2-3, -bh*0.17, 3, 4);
+    c.fillRect( bw/2,   -bh*0.17, 3, 4);
+  }
+
+  // ── Body ────────────────────────────────────────────────
   var bg=c.createLinearGradient(-bw/2,0,bw/2,0);
   bg.addColorStop(0,darkColor);
-  bg.addColorStop(0.25,bodyColor);
-  bg.addColorStop(0.75,bodyColor);
+  bg.addColorStop(0.22,bodyColor);
+  bg.addColorStop(0.78,bodyColor);
   bg.addColorStop(1,darkColor);
   c.fillStyle=bg;
   if (typeof c.roundRect==='function'){
-    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,r);c.fill();
+    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,cr);c.fill();
   } else {c.fillRect(-bw/2+1,-bh/2,bw-2,bh);}
 
-  // Roof panel (slightly darker center band)
+  // ── Bus: windows along sides ─────────────────────────
+  if (vtype==='bus') {
+    c.fillStyle='rgba(140,200,255,0.22)';
+    for (var wy=-bh/2+14; wy<bh/2-16; wy+=12) {
+      c.fillRect(-bw/2+2, wy, 4, 8);
+      c.fillRect( bw/2-6, wy, 4, 8);
+    }
+    // Bus front plate
+    c.fillStyle='rgba(255,255,255,0.08)';
+    c.fillRect(-bw/2+2, -bh/2+2, bw-4, 4);
+  }
+
+  // ── Roof panel ──────────────────────────────────────────
+  var roofFrac = (vtype==='suv') ? 0.46 : (vtype==='van'||vtype==='bus') ? 0.5 : 0.40;
   var rg=c.createLinearGradient(-bw/2,0,bw/2,0);
-  rg.addColorStop(0,'rgba(0,0,0,0.22)');
-  rg.addColorStop(0.5,isPlayer?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.05)');
-  rg.addColorStop(1,'rgba(0,0,0,0.22)');
+  rg.addColorStop(0,'rgba(0,0,0,0.25)');
+  rg.addColorStop(0.5,isPlayer?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.04)');
+  rg.addColorStop(1,'rgba(0,0,0,0.25)');
   c.fillStyle=rg;
-  c.fillRect(-bw/2+3, -bh*0.2, bw-6, bh*0.4);
+  if (vtype!=='bus') c.fillRect(-bw/2+2, -bh*roofFrac/2, bw-4, bh*roofFrac);
 
-  // Windshield (front glass)
-  c.fillStyle=isPlayer?'rgba(140,215,255,0.42)':'rgba(120,190,240,0.28)';
+  // ── Windshield (front glass) ─────────────────────────────
+  var wsFrac = (vtype==='bus') ? 0.14 : (vtype==='van') ? 0.18 : 0.22;
+  c.fillStyle=isPlayer?'rgba(140,215,255,0.44)':'rgba(120,190,240,0.26)';
   if (typeof c.roundRect==='function'){
-    c.beginPath();c.roundRect(-bw/2+3,-bh/2+5,bw-6,bh*0.22,2);c.fill();
-  } else { c.fillRect(-bw/2+3,-bh/2+5,bw-6,bh*0.22); }
-  // Glass highlight
-  c.fillStyle='rgba(255,255,255,0.14)';
-  c.fillRect(-bw/2+4,-bh/2+6,bw/2-4,3);
+    c.beginPath();c.roundRect(-bw/2+3,-bh/2+4,bw-6,bh*wsFrac,2);c.fill();
+  } else {c.fillRect(-bw/2+3,-bh/2+4,bw-6,bh*wsFrac);}
+  // Glass shine
+  c.fillStyle='rgba(255,255,255,0.13)';
+  c.fillRect(-bw/2+4,-bh/2+5,(bw-8)/2,3);
 
-  // Rear glass
-  c.fillStyle=isPlayer?'rgba(100,170,220,0.30)':'rgba(90,155,200,0.18)';
-  c.fillRect(-bw/2+3,bh/2-bh*0.22,bw-6,bh*0.18);
+  // ── Rear glass ──────────────────────────────────────────
+  if (vtype!=='van' && vtype!=='bus') {
+    c.fillStyle=isPlayer?'rgba(100,170,220,0.30)':'rgba(90,155,200,0.16)';
+    c.fillRect(-bw/2+3,bh/2-bh*0.22,bw-6,bh*0.16);
+  }
 
-  // Damage dents (player only)
+  // ── Taxi sign ────────────────────────────────────────────
+  if (vtype==='taxi') {
+    c.fillStyle='rgba(0,0,0,0.7)';
+    c.fillRect(-6,-bh/2-5,12,5);
+    c.fillStyle='#fbbf24';
+    c.font='bold 4px monospace'; c.textAlign='center';
+    c.fillText('ТАКСИ',0,-bh/2-1.5);
+  }
+
+  // ── Player highlight ────────────────────────────────────
+  if (isPlayer) {
+    c.strokeStyle='rgba(255,106,0,0.55)';
+    c.lineWidth=1.5; c.setLineDash([3,3]);
+    c.beginPath();
+    if (typeof c.roundRect==='function') c.roundRect(-bw/2-3,-bh/2-3,bw+6,bh+6,cr+2);
+    else c.rect(-bw/2-3,-bh/2-3,bw+6,bh+6);
+    c.stroke(); c.setLineDash([]);
+  }
+
+  // ── Damage dents (player only) ───────────────────────────
   if (isPlayer && car.damaged) {
     c.fillStyle='rgba(0,0,0,0.30)';
     car.dents.forEach(function(d){
       c.beginPath(); c.arc(d.lx,d.ly,3.5,0,Math.PI*2); c.fill();
-      // Dent scratch line
       c.strokeStyle='rgba(0,0,0,0.45)'; c.lineWidth=1;
       c.beginPath(); c.moveTo(d.lx-3,d.ly); c.lineTo(d.lx+3,d.ly+2); c.stroke();
     });
   }
 
-  // Outline
-  c.strokeStyle='rgba(0,0,0,0.45)'; c.lineWidth=1; c.setLineDash([]);
+  // ── Outline ──────────────────────────────────────────────
+  c.strokeStyle='rgba(0,0,0,0.42)'; c.lineWidth=1; c.setLineDash([]);
   if (typeof c.roundRect==='function'){
-    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,r);c.stroke();
+    c.beginPath();c.roundRect(-bw/2+1,-bh/2,bw-2,bh,cr);c.stroke();
   } else {c.strokeRect(-bw/2+1,-bh/2,bw-2,bh);}
 
   c.restore();
@@ -547,15 +614,17 @@ function rAICars(c) {
   G.aiCars.forEach(function(ai) {
     if (!ai.active) return;
     _drawCar(c, ai, ai.color, _darken(ai.color,35), false);
+    var fOff = ai.h/2+2, rOff = ai.h/2+2;
     // Headlights
-    c.save(); c.translate(ai.x+Math.cos(ai.angle)*17, ai.y+Math.sin(ai.angle)*17);
+    c.save(); c.translate(ai.x+Math.cos(ai.angle)*fOff, ai.y+Math.sin(ai.angle)*fOff);
     c.fillStyle='rgba(255,255,200,0.82)';
-    c.beginPath();c.arc(-5,0,2.2,0,Math.PI*2);c.fill();
-    c.beginPath();c.arc(5,0,2.2,0,Math.PI*2);c.fill();
+    var hlr = ai.vtype==='bus' ? 3 : 2.2;
+    c.beginPath();c.arc(-5,0,hlr,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(5,0,hlr,0,Math.PI*2);c.fill();
     c.restore();
     // Brake lights
     if (ai.waiting) {
-      c.save(); c.translate(ai.x-Math.cos(ai.angle)*17, ai.y-Math.sin(ai.angle)*17);
+      c.save(); c.translate(ai.x-Math.cos(ai.angle)*rOff, ai.y-Math.sin(ai.angle)*rOff);
       c.shadowColor='#ef4444'; c.shadowBlur=10;
       c.fillStyle='rgba(239,68,68,0.9)';
       c.beginPath();c.arc(-5,0,2.5,0,Math.PI*2);c.fill();
