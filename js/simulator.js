@@ -102,6 +102,82 @@ function darkenHex(hex, amt) {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  MULTI-LANE ROAD RENDERER
+//  Draws a road rectangle with 3 lanes per direction, center
+//  double-yellow divider, dashed white lane dividers, edge lines
+//  and curb/sidewalk strips.
+// ══════════════════════════════════════════════════════════════
+function drawRoadMultiLane(c, r, iceMode) {
+  const horiz = r.w > r.h;
+  const cross = horiz ? r.h : r.w; // perpendicular dimension
+  const lw = cross / 6;            // one lane width (3 per direction)
+
+  // ── Curb / sidewalk strip ────────────────────────────────
+  if (!iceMode) {
+    c.fillStyle = '#3a342e';
+    const sw = 14;
+    if (horiz) {
+      c.fillRect(r.x, r.y-sw, r.w, sw);
+      c.fillRect(r.x, r.y+r.h, r.w, sw);
+    } else {
+      c.fillRect(r.x-sw, r.y, sw, r.h);
+      c.fillRect(r.x+r.w, r.y, sw, r.h);
+    }
+  }
+
+  // ── Road surface ─────────────────────────────────────────
+  c.fillStyle = iceMode ? '#8090a8' : '#2c2924';
+  c.fillRect(r.x, r.y, r.w, r.h);
+
+  // ── Outer edge lines (solid white, thick) ────────────────
+  c.strokeStyle = iceMode ? 'rgba(210,220,230,0.85)' : 'rgba(240,235,210,0.9)';
+  c.lineWidth = 2.5;
+  c.setLineDash([]);
+  if (horiz) {
+    c.beginPath(); c.moveTo(r.x,r.y+1.5);   c.lineTo(r.x+r.w,r.y+1.5);   c.stroke();
+    c.beginPath(); c.moveTo(r.x,r.y+r.h-1.5); c.lineTo(r.x+r.w,r.y+r.h-1.5); c.stroke();
+  } else {
+    c.beginPath(); c.moveTo(r.x+1.5,r.y);   c.lineTo(r.x+1.5,r.y+r.h);   c.stroke();
+    c.beginPath(); c.moveTo(r.x+r.w-1.5,r.y); c.lineTo(r.x+r.w-1.5,r.y+r.h); c.stroke();
+  }
+
+  // ── Center double-yellow divider ────────────────────────
+  const yellowCol = iceMode ? 'rgba(200,215,235,0.8)' : 'rgba(255,200,30,0.92)';
+  c.strokeStyle = yellowCol;
+  c.lineWidth = 2;
+  c.setLineDash([]);
+  if (horiz) {
+    const cy = r.y + cross/2;
+    c.beginPath(); c.moveTo(r.x,cy-3); c.lineTo(r.x+r.w,cy-3); c.stroke();
+    c.beginPath(); c.moveTo(r.x,cy+3); c.lineTo(r.x+r.w,cy+3); c.stroke();
+  } else {
+    const cx2 = r.x + cross/2;
+    c.beginPath(); c.moveTo(cx2-3,r.y); c.lineTo(cx2-3,r.y+r.h); c.stroke();
+    c.beginPath(); c.moveTo(cx2+3,r.y); c.lineTo(cx2+3,r.y+r.h); c.stroke();
+  }
+
+  // ── Lane dividers (dashed white) ─────────────────────────
+  c.strokeStyle = iceMode ? 'rgba(200,215,235,0.5)' : 'rgba(240,235,210,0.6)';
+  c.lineWidth = 1.5;
+  c.setLineDash(horiz ? [22, 14] : [16, 11]);
+
+  // 2 dividers per direction, skipping the center (double-yellow)
+  [1, 2, 4, 5].forEach(i => {
+    if (horiz) {
+      const y = r.y + lw * i;
+      c.beginPath(); c.moveTo(r.x, y); c.lineTo(r.x+r.w, y); c.stroke();
+    } else {
+      const x = r.x + lw * i;
+      c.beginPath(); c.moveTo(x, r.y); c.lineTo(x, r.y+r.h); c.stroke();
+    }
+  });
+  c.setLineDash([]);
+
+  // ── Intersection zone: solid crossing line ────────────────
+  // (clear the dashes at intersecting roads — handled by drawing order)
+}
+
+// ══════════════════════════════════════════════════════════════
 //  UB SATELLITE-STYLE RENDERER  (Google Maps top-down look)
 // ══════════════════════════════════════════════════════════════
 function drawUBSatellite(c, S) {
@@ -368,30 +444,61 @@ function buildMap(id) {
   };
   const S = simState;
 
+  // Road geometry: 3 lanes × 2 directions
+  // RW=132 total (6 lanes × 22px), HALF=66 from center
+  const RW=132, HALF=66;
+
   if (id==='sc1') {
-    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
-    S.lights = [
-      {x:cx+36,y:cy-52,state:'red',t:0,cycle:200,phase:0,penalized:false},
-      {x:cx-52,y:cy+36,state:'green',t:100,cycle:200,phase:100,penalized:false},
+    S.roads = [
+      {x:cx-620,y:cy-HALF,w:1240,h:RW},   // horizontal main road
+      {x:cx-HALF,y:cy-620,w:RW,h:1240},   // vertical cross road
     ];
+    S.lights = [
+      // NE corner: red for car going north (right of vertical road)
+      {x:cx+HALF+14,y:cy+30,state:'red', t:0,  cycle:200,phase:0,  penalized:false},
+      // SW corner: green for east-west traffic
+      {x:cx-30,     y:cy+HALF+14,state:'green',t:100,cycle:200,phase:100,penalized:false},
+    ];
+    // Car going north, in right lane of vertical road (east side = cx+44)
+    S.car = {x:cx+44,y:cy+simCH*0.28+HALF,angle:-Math.PI/2,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='sc2') {
-    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
-    S.peds = [{x:cx+70,y:cy-28,vy:0.6,waiting:true,crossed:false,timer:150,penalized:false}];
-    S.signs = [{x:cx-20,y:cy-70,icon:'🚸',name:'Явган хүний гарц',rule:'Явган хүнд заавал зам тавина',triggered:false}];
+    S.roads = [
+      {x:cx-620,y:cy-HALF,w:1240,h:RW},
+      {x:cx-HALF,y:cy-620,w:RW,h:1240},
+    ];
+    // Pedestrian crosses left-to-right across the horizontal road
+    S.peds = [{x:cx+HALF+30,y:cy-HALF+22,vy:0.55,waiting:true,crossed:false,timer:150,penalized:false}];
+    S.signs = [{x:cx+HALF+30,y:cy-HALF-36,icon:'🚸',name:'Явган хүний гарц',rule:'Явган хүнд заавал зам тавина',triggered:false}];
+    S.car = {x:cx+44,y:cy+simCH*0.28+HALF,angle:-Math.PI/2,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='sc3') {
-    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
-    S.signs = [{x:cx-22,y:cy+52,icon:'🔴',name:'STOP',rule:'Заавал БҮРЭН зогс — хурдаа бааруулах хангалтгүй!',triggered:false,isStop:true}];
+    S.roads = [
+      {x:cx-620,y:cy-HALF,w:1240,h:RW},
+      {x:cx-HALF,y:cy-620,w:RW,h:1240},
+    ];
+    S.signs = [{x:cx+44,y:cy+HALF+28,icon:'🔴',name:'STOP',rule:'Заавал БҮРЭН зогс — хурдаа бааруулах хангалтгүй!',triggered:false,isStop:true}];
+    S.car = {x:cx+44,y:cy+simCH*0.28+HALF,angle:-Math.PI/2,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='sc4') {
-    S.roads = [{x:cx-700,y:cy-30,w:1400,h:60}];
-    S.signs = [{x:cx+180,y:cy-48,icon:'❄️',name:'Мөстэй зам',rule:'Хурдаа бааруул — гальмуурдах зай 5–10 дахин нэмэгдэнэ',triggered:false}];
+    S.roads = [{x:cx-720,y:cy-HALF,w:1440,h:RW}];
+    S.signs = [{x:cx+200,y:cy-HALF-32,icon:'❄️',name:'Мөстэй зам',rule:'Хурдаа бааруул — гальмуурдах зай 5–10 дахин нэмэгдэнэ',triggered:false}];
+    // Car in rightmost eastbound lane (south half, near bottom)
+    S.car = {x:cx-380,y:cy+HALF-22,angle:0,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='sc5') {
-    S.roads = [{x:cx-500,y:cy-24,w:1000,h:48},{x:cx-24,y:cy-300,w:48,h:600}];
-    S.ambulance = {x:simCW+80,y:cy-12,vx:-3.2,active:true,penalized:false};
-    S.signs = [{x:cx-140,y:cy-52,icon:'🚑',name:'Яаралтай тусламж',rule:'Замаас зайл — баруун тийш зогсо!',triggered:false}];
+    S.roads = [
+      {x:cx-620,y:cy-HALF,w:1240,h:RW},
+      {x:cx-HALF,y:cy-620,w:RW,h:1240},
+    ];
+    S.ambulance = {x:simCW+100,y:cy+HALF-22,vx:-3.2,active:true,penalized:false};
+    S.signs = [{x:cx-200,y:cy-HALF-32,icon:'🚑',name:'Яаралтай тусламж',rule:'Замаас зайл — баруун тийш зогсо!',triggered:false}];
+    S.car = {x:cx-300,y:cy+HALF-22,angle:0,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='sc6') {
-    S.roads = [{x:cx-500,y:cy-22,w:1000,h:44},{x:cx-22,y:cy-300,w:44,h:600}];
-    S.roundabout = {x:cx,y:cy,r:68};
-    S.signs = [{x:cx+90,y:cy-80,icon:'🔄',name:'Дугуй эргэлт',rule:'Дотор талын машинд замыг заавал тавина',triggered:false}];
+    const R6W=108, R6H=54;
+    S.roads = [
+      {x:cx-620,y:cy-R6H,w:1240,h:R6W},
+      {x:cx-R6H,y:cy-620,w:R6W,h:1240},
+    ];
+    S.roundabout = {x:cx,y:cy,r:88};
+    S.signs = [{x:cx+R6H+50,y:cy-R6H-28,icon:'🔄',name:'Дугуй эргэлт',rule:'Дотор талын машинд замыг заавал тавина',triggered:false}];
+    S.car = {x:cx+R6H-22,y:cy+simCH*0.28+R6H,angle:-Math.PI/2,speed:0,maxSpeed:5.8,accel:0.2,brake:0.28,friction:0.07};
   } else if (id==='ub') {
     // ─── UB World: 2800×520, Peace Avenue satellite view ───
     const WW=2800, WH=520;
@@ -591,11 +698,11 @@ function simUpdate() {
     const p = (l.t+l.phase) % l.cycle;
     l.state = p < l.cycle*0.42 ? 'red' : p < l.cycle*0.52 ? 'yellow' : 'green';
     const d = Math.hypot(car.x-l.x, car.y-l.y);
-    if (d<28 && l.state==='red' && Math.abs(car.speed)>0.5 && !l.penalized) {
+    if (d<65 && l.state==='red' && Math.abs(car.speed)>0.5 && !l.penalized) {
       l.penalized=true; simDeduct(20,'🚦 Улаан гэрэл зөрчлөө! −20 оноо');
       setTimeout(()=>{ if(l) l.penalized=false; },5000);
     }
-    if (d>60) l.penalized=false;
+    if (d>100) l.penalized=false;
   });
 
   S.signs?.forEach(sg => {
@@ -744,39 +851,20 @@ function simDraw() {
       c.beginPath();c.arc(tx,ty,1.5+Math.sin(i)*1,0,Math.PI*2);c.fill();
     }
   } else {
-    // Green grass
+    // Urban verge / grass strip
     const grassGrad = c.createLinearGradient(0,0,0,bgH);
-    grassGrad.addColorStop(0,'#1a3020');grassGrad.addColorStop(1,'#152618');
+    grassGrad.addColorStop(0,'#1c2e18');grassGrad.addColorStop(1,'#162412');
     c.fillStyle=grassGrad; c.fillRect(bgX,bgY,bgW,bgH);
-    // grass texture lines
-    c.strokeStyle='rgba(255,255,255,0.025)';c.lineWidth=1;
-    for(let i=0;i<20;i++){
-      const ty=bgY+i*(bgH/20);
+    // subtle grid for depth
+    c.strokeStyle='rgba(0,0,0,0.1)';c.lineWidth=1;
+    for(let i=0;i<24;i++){
+      const ty=bgY+i*(bgH/24);
       c.beginPath();c.moveTo(bgX,ty);c.lineTo(bgX+bgW,ty);c.stroke();
     }
   }
 
-  // ── Roads ──
-  S.roads?.forEach(r=>{
-    const horiz = r.w > r.h;
-    // sidewalks
-    if (!S.iceMode) {
-      c.fillStyle='#2a2820';
-      if(horiz){c.fillRect(r.x,r.y-9,r.w,9);c.fillRect(r.x,r.y+r.h,r.w,9);}
-      else{c.fillRect(r.x-9,r.y,9,r.h);c.fillRect(r.x+r.w,r.y,9,r.h);}
-    }
-    c.fillStyle=S.iceMode?'#8090a8':'#282828';
-    c.fillRect(r.x,r.y,r.w,r.h);
-    c.strokeStyle=S.iceMode?'rgba(255,255,255,0.5)':'rgba(255,255,255,0.35)';
-    c.lineWidth=2;c.setLineDash([]);
-    c.strokeRect(r.x+1,r.y+1,r.w-2,r.h-2);
-    c.setLineDash([horiz?22:16,13]);
-    c.strokeStyle=S.iceMode?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.3)';
-    c.lineWidth=2.5;c.beginPath();
-    if(horiz){c.moveTo(r.x,r.y+r.h/2);c.lineTo(r.x+r.w,r.y+r.h/2);}
-    else{c.moveTo(r.x+r.w/2,r.y);c.lineTo(r.x+r.w/2,r.y+r.h);}
-    c.stroke();c.setLineDash([]);
-  });
+  // ── Roads (multi-lane: 3+3) ──
+  S.roads?.forEach(r => drawRoadMultiLane(c, r, S.iceMode));
 
   // ── Ice patches ──
   if(S.iceMode){
