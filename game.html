@@ -5,10 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>SmartDriver UB — Open World Simulator</title>
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0f;font-family:'JetBrains Mono',monospace;color:#f0eeea}
-#game-canvas{display:block;position:fixed;top:0;left:0;z-index:0}
+/* Satellite map background */
+#map-bg{position:fixed;inset:0;z-index:1;display:none}
+#map-bg .leaflet-container{background:#111 !important}
+/* Leaflet attribution mini */
+.leaflet-bottom.leaflet-right{display:none}
+/* Canvas is transparent overlay above map */
+#game-canvas{display:block;position:fixed;top:0;left:0;z-index:2;background:transparent}
 
 /* ── MENU ── */
 #game-menu{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#120a18 0%,#0a0a0f 70%)}
@@ -165,6 +172,8 @@ canvas#spd-canvas{position:absolute;top:0;left:0;width:96px;height:96px;z-index:
 </style>
 </head>
 <body>
+<!-- Satellite map background (Leaflet + Esri World Imagery) -->
+<div id="map-bg"></div>
 <canvas id="game-canvas"></canvas>
 
 <!-- MENU -->
@@ -324,6 +333,8 @@ canvas#spd-canvas{position:absolute;top:0;left:0;width:96px;height:96px;z-index:
   </div>
 </div>
 
+<!-- Leaflet mapping library -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Module load order is critical -->
 <script src="js/game/traffic.js"></script>
 <script src="js/game/world.js"></script>

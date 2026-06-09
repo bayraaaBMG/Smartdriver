@@ -242,6 +242,10 @@ function startGame(mode) {
     $('hud-task').style.display='block';
   }
 
+  // Show satellite map background
+  if (typeof initLeafletMap === 'function') initLeafletMap();
+  $('map-bg').style.display='block';
+
   G.running=true; G.paused=false;
   cancelAnimationFrame(_raf);
   _raf=requestAnimationFrame(_loop);
@@ -274,6 +278,7 @@ function showGameMenu() {
   $('viol-log').style.display='none';
   $('hud-task').style.display='none';
   $('mob-game-ctrl').style.display='none';
+  $('map-bg').style.display='none';
 }
 
 function payFineAction() {
