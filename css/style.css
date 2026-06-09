@@ -474,6 +474,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height
 /* ── QUIZ: one-img layout fills width properly ── */
 .q-images.one-img{grid-template-columns:1fr}
 .q-images.one-img .q-img{max-height:54vh;object-fit:contain}
+/* Canvas panel for cropped quiz question image */
+.q-images.one-img canvas{
+  display:block;margin:0 auto;
+  max-width:100%;max-height:52vh;
+  image-rendering:-webkit-optimize-contrast;
+  image-rendering:crisp-edges;
+}
 
 @media(max-width:600px){
   .menu-section-sub{display:none}

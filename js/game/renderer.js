@@ -38,11 +38,18 @@ function render() {
 
 // ── Ground ────────────────────────────────────────────────────
 function rGround(c) {
-  c.fillStyle='#5c5246'; c.fillRect(0,0,WORLD.W,WORLD.H);
-  c.fillStyle='rgba(0,0,0,0.055)';
-  for (var x=0;x<WORLD.W;x+=88)
-    for (var y=0;y<WORLD.H;y+=88)
-      if (((x/88|0)+(y/88|0))%2===0) c.fillRect(x,y,88,88);
+  // Dark urban base
+  c.fillStyle='#484440'; c.fillRect(0,0,WORLD.W,WORLD.H);
+  // Subtle tile grid (courtyard pattern)
+  c.fillStyle='rgba(0,0,0,0.04)';
+  for (var x=0;x<WORLD.W;x+=72)
+    for (var y=0;y<WORLD.H;y+=72)
+      if (((x/72|0)+(y/72|0))%2===0) c.fillRect(x,y,72,72);
+  // Warm city-block fill — each block between roads gets a unique tone
+  c.fillStyle='rgba(90,78,65,0.18)';
+  for (var bx=0;bx<WORLD.W;bx+=320)
+    for (var by=0;by<WORLD.H;by+=240)
+      if (((bx/320|0)+(by/240|0))%3!==1) c.fillRect(bx,by,320,240);
 }
 
 // ── Special areas (Sukhbaatar Square, parks) ──────────────────
@@ -142,14 +149,22 @@ function rBuildings(c) {
         c.strokeRect(b.x,b.y,b.w,b.h);
       }
     } else {
-      // Regular building details
-      c.strokeStyle='rgba(0,0,0,0.15)'; c.lineWidth=1; c.setLineDash([]);
+      // Regular building outline
+      c.strokeStyle='rgba(0,0,0,0.18)'; c.lineWidth=1; c.setLineDash([]);
       c.strokeRect(b.x,b.y,b.w,b.h);
-      c.strokeStyle='rgba(255,255,255,0.06)'; c.lineWidth=1;
+      c.strokeStyle='rgba(255,255,255,0.07)'; c.lineWidth=1;
       c.strokeRect(b.x+2,b.y+2,b.w-4,b.h-4);
-      if (b.w>38 && b.h>28) {
-        c.fillStyle='rgba(0,0,0,0.08)';
-        c.fillRect(b.x+b.w/2-6,b.y+b.h/2-4,12,8);
+
+      // Window grid — deterministic lit/dark per position
+      if (b.w>=24 && b.h>=18) {
+        var ws=4, wg=5, mg=4;
+        for (var wxi=b.x+mg; wxi<b.x+b.w-mg-ws; wxi+=ws+wg) {
+          for (var wyi=b.y+mg; wyi<b.y+b.h-mg-3; wyi+=ws+wg) {
+            var h=((Math.round(wxi)*31)^(Math.round(wyi)*37))&0xff;
+            c.fillStyle = h>165 ? 'rgba(255,240,130,0.17)' : 'rgba(100,155,255,0.08)';
+            c.fillRect(wxi, wyi, ws, 3);
+          }
+        }
       }
     }
   });
@@ -217,7 +232,21 @@ function rMarkings(c) {
       }
     }
     c.setLineDash([]);
+  });
 
+  // Stop lines at each intersection approach (drawn once, outside the road loop)
+  c.strokeStyle='rgba(240,235,210,0.72)'; c.lineWidth=3; c.setLineDash([]);
+  wInters.forEach(function(n) {
+    var so=5; // offset just outside intersection edge
+    c.beginPath(); c.moveTo(n.x-n.vw, n.y-n.hw-so); c.lineTo(n.x+n.vw, n.y-n.hw-so); c.stroke();
+    c.beginPath(); c.moveTo(n.x-n.vw, n.y+n.hw+so); c.lineTo(n.x+n.vw, n.y+n.hw+so); c.stroke();
+    c.beginPath(); c.moveTo(n.x-n.vw-so, n.y-n.hw); c.lineTo(n.x-n.vw-so, n.y+n.hw); c.stroke();
+    c.beginPath(); c.moveTo(n.x+n.vw+so, n.y-n.hw); c.lineTo(n.x+n.vw+so, n.y+n.hw); c.stroke();
+  });
+
+  wRoads.forEach(function(r) {
+    var D  = r.horiz ? r.h : r.w;
+    var lw = D / (r.lpd * 2);
     // Road name — repeated every 600px so always visible
     if (r.len>400) {
       c.font='bold 8px "JetBrains Mono",monospace';
@@ -330,18 +359,40 @@ function rPeds(c) {
   G.peds.forEach(function(p) {
     if (p.state==='done') return;
     c.save(); c.translate(p.x,p.y);
-    if (p.state==='scared') c.globalAlpha=0.5;
-    // Body
-    c.fillStyle=p.shirt; c.fillRect(-4,-8,8,10);
+    if (p.state==='scared') c.globalAlpha=0.55;
+
+    // Ground shadow
+    c.fillStyle='rgba(0,0,0,0.30)';
+    c.beginPath(); c.ellipse(1,4,4.5,2.5,0,0,Math.PI*2); c.fill();
+
+    // Legs
+    var sw = p.state==='crossing' ? Math.sin(p._walkPhase)*3.5 : 0;
+    c.strokeStyle='rgba(45,35,35,0.92)'; c.lineWidth=2.5;
+    c.beginPath(); c.moveTo(-2,3); c.lineTo(-3+sw,9); c.stroke();
+    c.beginPath(); c.moveTo(2,3);  c.lineTo(3-sw,9);  c.stroke();
+
+    // Body / shirt
+    c.fillStyle=p.shirt;
+    if (typeof c.roundRect==='function') {
+      c.beginPath(); c.roundRect(-4,-7,8,10,2); c.fill();
+    } else { c.fillRect(-4,-7,8,10); }
+
+    // Arms
+    c.strokeStyle=p.skin; c.lineWidth=2;
+    c.beginPath(); c.moveTo(-4,-3); c.lineTo(-6+sw,-1+sw*0.5); c.stroke();
+    c.beginPath(); c.moveTo(4,-3);  c.lineTo(6-sw,-1-sw*0.5); c.stroke();
+
     // Head
-    c.fillStyle=p.skin; c.beginPath(); c.arc(0,-11,4,0,Math.PI*2); c.fill();
-    // Walking legs
-    if (p.state==='crossing') {
-      var leg=Math.sin(p._walkPhase)*3;
-      c.strokeStyle=p.skin; c.lineWidth=2;
-      c.beginPath();c.moveTo(-2,2);c.lineTo(-2+leg,8);c.stroke();
-      c.beginPath();c.moveTo(2,2);c.lineTo(2-leg,8);c.stroke();
-    }
+    c.fillStyle=p.skin;
+    c.beginPath(); c.arc(0,-12,4.5,0,Math.PI*2); c.fill();
+    // Hair (top arc)
+    c.fillStyle='rgba(30,20,10,0.55)';
+    c.beginPath(); c.arc(0,-13,3.8,Math.PI,0); c.fill();
+    // Eye dots
+    c.fillStyle='rgba(0,0,0,0.6)';
+    c.fillRect(-2,-12,1.5,1.5);
+    c.fillRect(1,-12,1.5,1.5);
+
     c.globalAlpha=1; c.restore();
   });
 }

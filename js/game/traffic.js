@@ -213,8 +213,8 @@ var Pedestrian = (function() {
       return;
     }
 
-    // Crossing allowed when NS red (EW pedestrians cross)
-    var canCross = !this.nearLight || this.nearLight.nsState === 'red';
+    // Crossing allowed when EW cars have red light (pedestrian crosses horizontal road)
+    var canCross = !this.nearLight || this.nearLight.ewState === 'red';
 
     if (this.state==='waiting') {
       if (--this.waitTimer<=0 && canCross) this.state='crossing';
