@@ -218,8 +218,8 @@ function startGame(mode) {
   G.player=new PlayerCar(280, startY, 0);
   G.speedLimit=peace?peace.spd:60;
 
-  // Camera
-  cam.x=280-GCW/(2*cam.zoom); cam.y=startY-GCH/(2*cam.zoom);
+  // Camera — OBL (oblique y factor) defined in renderer.js
+  cam.x=280-GCW/(2*cam.zoom); cam.y=startY-GCH/(2*cam.zoom*OBL);
   cam.tx=cam.x; cam.ty=cam.y;
 
   // Mode label
@@ -230,7 +230,8 @@ function startGame(mode) {
   $('game-menu').style.display='none';
   $('game-hud').style.display='block';
   $('hud-health').style.display='block';
-  $('hud-speed-wrap').style.display='block';
+  $('hud-speed-wrap').style.display='flex';
+  $('hud-ctrl-btns').style.display='flex';
   $('game-minimap').style.display='block';
   $('viol-log').style.display='block';
   if('ontouchstart' in window) $('mob-game-ctrl').style.display='block';
@@ -268,6 +269,7 @@ function showGameMenu() {
   $('game-hud').style.display='none';
   $('hud-health').style.display='none';
   $('hud-speed-wrap').style.display='none';
+  $('hud-ctrl-btns').style.display='none';
   $('game-minimap').style.display='none';
   $('viol-log').style.display='none';
   $('hud-task').style.display='none';
@@ -279,6 +281,59 @@ function payFineAction() {
   G.player.crashed=false; G.player.crashTimer=0;
   G._pendingFine=0;
   pushAlert('✅ Торгууль төлөгдлөө','Аюулгүй явна уу!','#22c55e');
+}
+
+// ── Compass ───────────────────────────────────────────────────
+var _compCanvas=null, _compCtx=null;
+function drawCompass() {
+  if (!_compCanvas) {
+    _compCanvas = document.getElementById('compass-canvas');
+    if (_compCanvas) _compCtx = _compCanvas.getContext('2d');
+  }
+  if (!_compCtx || !G.player) return;
+  var c=_compCtx, sz=_compCanvas.width, cx=sz/2, cy=sz/2, r=sz/2-3;
+  c.clearRect(0,0,sz,sz);
+
+  // Background circle
+  c.fillStyle='rgba(6,6,14,0.92)';
+  c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.fill();
+
+  // Subtle tick marks (every 45°)
+  c.strokeStyle='rgba(255,255,255,0.14)'; c.lineWidth=1;
+  for (var i=0;i<8;i++) {
+    var a=i*Math.PI/4;
+    var inner=(i%2===0)?r-10:r-7;
+    c.beginPath();
+    c.moveTo(cx+Math.cos(a)*(r-2), cy+Math.sin(a)*(r-2));
+    c.lineTo(cx+Math.cos(a)*inner,  cy+Math.sin(a)*inner);
+    c.stroke();
+  }
+
+  // Rotate so north stays up while showing heading
+  var heading = G.player.angle + Math.PI/2; // world angle → compass heading
+  c.save(); c.translate(cx,cy); c.rotate(-heading);
+
+  // N arrow (green)
+  c.fillStyle='#22c55e';
+  c.beginPath(); c.moveTo(0,-(r-7)); c.lineTo(-5,0); c.lineTo(5,0); c.closePath(); c.fill();
+
+  // S arrow (white/dim)
+  c.fillStyle='rgba(255,255,255,0.22)';
+  c.beginPath(); c.moveTo(0,r-7); c.lineTo(-4,0); c.lineTo(4,0); c.closePath(); c.fill();
+
+  // Center dot
+  c.fillStyle='rgba(255,255,255,0.4)';
+  c.beginPath(); c.arc(0,0,2.5,0,Math.PI*2); c.fill();
+  c.restore();
+
+  // "N" label (fixed, always at top)
+  c.fillStyle='#22c55e';
+  c.font='bold 9px "JetBrains Mono",monospace'; c.textAlign='center';
+  c.fillText('N', cx, 13);
+
+  // Ring border
+  c.strokeStyle='rgba(255,255,255,0.10)'; c.lineWidth=1.5;
+  c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.stroke();
 }
 
 // ── Helpers ───────────────────────────────────────────────────

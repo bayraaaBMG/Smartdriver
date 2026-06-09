@@ -59,22 +59,22 @@ var cam = {
   x:0, y:0, tx:0, ty:0,
   zoom:1.35, tz:1.35,
   update: function(px, py, angle) {
-    // Lookahead: camera leads slightly in direction of travel
     var la = 35;
     var lx = px + Math.cos(angle)*la;
     var ly = py + Math.sin(angle)*la;
 
     this.tx = lx - GCW/(2*this.zoom);
-    this.ty = ly - GCH/(2*this.zoom);
+    // OBL: y is compressed so we need to see more world in y direction
+    this.ty = ly - GCH/(2*this.zoom*OBL);
     this.tx = Math.max(0, Math.min(WORLD.W - GCW/this.zoom, this.tx));
-    this.ty = Math.max(0, Math.min(WORLD.H - GCH/this.zoom, this.ty));
+    this.ty = Math.max(0, Math.min(WORLD.H - GCH/(this.zoom*OBL), this.ty));
 
     this.x  += (this.tx - this.x) * 0.12;
     this.y  += (this.ty - this.y) * 0.12;
     this.zoom += (this.tz - this.zoom) * 0.07;
   },
   toScreen: function(wx, wy) {
-    return [(wx-this.x)*this.zoom, (wy-this.y)*this.zoom];
+    return [(wx-this.x)*this.zoom, (wy-this.y)*this.zoom*OBL];
   },
 };
 
@@ -140,6 +140,7 @@ function _loop() {
   render();
   drawAlerts(gctx);
   drawMinimap();
+  drawCompass();
   _raf = requestAnimationFrame(_loop);
 }
 

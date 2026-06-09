@@ -1,13 +1,16 @@
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  RENDERER.JS — Бүх зурах функцууд (satellite-style top-down)
+//  RENDERER.JS — Oblique aerial city renderer
 // ═══════════════════════════════════════════════════════════════
+
+// Oblique y-compression factor (0.58 ≈ 55° aerial camera angle)
+var OBL = 0.58;
 
 function render() {
   var c = gctx;
   c.clearRect(0,0,GCW,GCH);
   c.save();
-  c.scale(cam.zoom, cam.zoom);
+  c.scale(cam.zoom, cam.zoom * OBL);
   c.translate(-cam.x, -cam.y);
 
   rGround(c);
@@ -39,18 +42,13 @@ function render() {
 
 // ── Ground ────────────────────────────────────────────────────
 function rGround(c) {
-  // Dark urban base
-  c.fillStyle='#484440'; c.fillRect(0,0,WORLD.W,WORLD.H);
-  // Subtle tile grid (courtyard pattern)
-  c.fillStyle='rgba(0,0,0,0.04)';
-  for (var x=0;x<WORLD.W;x+=72)
-    for (var y=0;y<WORLD.H;y+=72)
-      if (((x/72|0)+(y/72|0))%2===0) c.fillRect(x,y,72,72);
-  // Warm city-block fill — each block between roads gets a unique tone
-  c.fillStyle='rgba(90,78,65,0.18)';
-  for (var bx=0;bx<WORLD.W;bx+=320)
-    for (var by=0;by<WORLD.H;by+=240)
-      if (((bx/320|0)+(by/240|0))%3!==1) c.fillRect(bx,by,320,240);
+  // Urban ground — warm mid-tone like UB city blocks
+  c.fillStyle='#5a5450'; c.fillRect(0,0,WORLD.W,WORLD.H);
+  // Subtle block variation
+  c.fillStyle='rgba(0,0,0,0.05)';
+  for (var x=0;x<WORLD.W;x+=80)
+    for (var y=0;y<WORLD.H;y+=80)
+      if (((x/80|0)+(y/80|0))%2===0) c.fillRect(x,y,80,80);
 }
 
 // ── Special areas (Sukhbaatar Square, parks) ──────────────────
@@ -109,18 +107,20 @@ function rSpecialAreas(c) {
 // ── Buildings ─────────────────────────────────────────────────
 function rBuildings(c) {
   wBuildings.forEach(function(b) {
-    // Pseudo-3D: south face (depth illusion)
-    var wallH = Math.min(b.h * 0.12, 7);
-    c.fillStyle = _darken(b.col, 40);
-    c.fillRect(b.x, b.y+b.h, b.w, wallH);
-    // Pseudo-3D: east face
-    var wallW = Math.min(b.w * 0.08, 6);
-    c.fillStyle = _darken(b.col, 55);
-    c.fillRect(b.x+b.w, b.y+wallW*0.6, wallW, b.h+wallH-wallW*0.6);
+    // Prominent shadow (south-east direction for oblique feel)
+    c.fillStyle='rgba(0,0,0,0.26)';
+    c.fillRect(b.x+6,b.y+10,b.w,b.h);
 
-    // Shadow (shifted for depth feel)
-    c.fillStyle='rgba(0,0,0,0.18)';
-    c.fillRect(b.x+5,b.y+6,b.w,b.h);
+    // Pseudo-3D SOUTH face — tall, visible due to oblique camera
+    var wallH = Math.min(b.h * 0.38, 28);
+    if (b.landmark) wallH = Math.min(b.h * 0.45, 40);
+    c.fillStyle = _darken(b.col, 38);
+    c.fillRect(b.x, b.y+b.h, b.w, wallH);
+
+    // Pseudo-3D EAST face
+    var wallW = Math.min(b.w * 0.14, 10);
+    c.fillStyle = _darken(b.col, 52);
+    c.fillRect(b.x+b.w, b.y+wallW*0.5, wallW, b.h+wallH-wallW*0.5);
 
     // Body
     c.fillStyle = b.col;
@@ -183,8 +183,8 @@ function rBuildings(c) {
 // ── Roads ─────────────────────────────────────────────────────
 var SW=14; // sidewalk width
 function rRoads(c) {
-  // Sidewalks (warm sand/beige — UB concrete pavements)
-  c.fillStyle='#b4a078';
+  // Wide sidewalks — warm UB concrete (tan/beige)
+  c.fillStyle='#c0a87c';
   wRoads.forEach(function(r) {
     if (r.horiz) {
       c.fillRect(r.x0,r.y0-SW,r.len,SW);
@@ -194,9 +194,8 @@ function rRoads(c) {
       c.fillRect(r.x0+r.w,r.y0,SW,r.len);
     }
   });
-
-  // Sidewalk kerb edge (thin dark line)
-  c.fillStyle='rgba(0,0,0,0.18)';
+  // Kerb shadow line
+  c.fillStyle='rgba(0,0,0,0.20)';
   wRoads.forEach(function(r) {
     if (r.horiz) {
       c.fillRect(r.x0,r.y0-2,r.len,2);
@@ -207,37 +206,60 @@ function rRoads(c) {
     }
   });
 
-  // Intersection corner boxes (slightly darker than road surface)
-  c.fillStyle='#2e2e32';
+  // Intersection corner boxes
+  c.fillStyle='#686870';
   wInters.forEach(function(n) {
     c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
   });
 
-  // Road surfaces (medium dark gray asphalt)
-  c.fillStyle='#383838';
+  // Road surfaces — realistic light-gray asphalt (like reference)
+  c.fillStyle='#6e6e74';
   wRoads.forEach(function(r) {
     if (r.horiz) c.fillRect(r.x0,r.y0,r.len,r.h);
     else         c.fillRect(r.x0,r.y0,r.w,r.len);
   });
 
   // Green medians on wide roads (lpd≥3 = Энхтайваны өргөн чөлөө)
-  c.fillStyle='#3a5a1c';
+  // Much wider, lush, with texture — matching reference photo
   wRoads.forEach(function(r) {
     if (r.lpd < 3) return;
-    var mw = 16;
-    if (r.horiz) c.fillRect(r.x0, r.yCen-mw/2, r.len, mw);
-    else         c.fillRect(r.xCen-mw/2, r.y0, mw, r.len);
-  });
-  // Median highlight (lighter strip along center)
-  c.fillStyle='rgba(80,140,40,0.35)';
-  wRoads.forEach(function(r) {
-    if (r.lpd < 3) return;
-    if (r.horiz) c.fillRect(r.x0, r.yCen-3, r.len, 6);
-    else         c.fillRect(r.xCen-3, r.y0, 6, r.len);
+    var mw = 42; // wide green median like reference
+    if (r.horiz) {
+      // Dark base green
+      c.fillStyle='#2a5018';
+      c.fillRect(r.x0, r.yCen-mw/2, r.len, mw);
+      // Mid-tone green patches
+      c.fillStyle='#3c6a22';
+      for (var mx=r.x0; mx<r.x0+r.len; mx+=48) {
+        c.fillRect(mx+4, r.yCen-mw/2+4, 40, mw-8);
+      }
+      // Light green center strip
+      c.fillStyle='rgba(90,160,50,0.45)';
+      c.fillRect(r.x0, r.yCen-6, r.len, 12);
+      // Occasional flower/shrub dots
+      c.fillStyle='rgba(200,180,50,0.55)';
+      for (var fx=r.x0+60; fx<r.x0+r.len; fx+=120) {
+        c.beginPath(); c.arc(fx, r.yCen, 7, 0, Math.PI*2); c.fill();
+      }
+    } else {
+      c.fillStyle='#2a5018';
+      c.fillRect(r.xCen-mw/2, r.y0, mw, r.len);
+      c.fillStyle='#3c6a22';
+      for (var my=r.y0; my<r.y0+r.len; my+=48) {
+        c.fillRect(r.xCen-mw/2+4, my+4, mw-8, 40);
+      }
+      c.fillStyle='rgba(90,160,50,0.45)';
+      c.fillRect(r.xCen-6, r.y0, 12, r.len);
+    }
   });
 
-  // Re-draw intersection area over medians for clean crossing
-  c.fillStyle='#2e2e32';
+  // Re-draw intersection area (covers median at crossing)
+  c.fillStyle='#686870';
+  wInters.forEach(function(n) {
+    c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
+  });
+  // Slightly lighter road surface inside intersection
+  c.fillStyle='#6e6e74';
   wInters.forEach(function(n) {
     c.fillRect(n.x-n.vw,n.y-n.hw,n.vw*2,n.hw*2);
   });
@@ -249,24 +271,26 @@ function rMarkings(c) {
     var D  = r.horiz ? r.h : r.w;
     var lw = D / (r.lpd * 2);
 
-    // Edge lines
-    c.strokeStyle='rgba(240,235,210,0.82)'; c.lineWidth=2.5; c.setLineDash([]);
+    // Edge lines (white, crisp)
+    c.strokeStyle='rgba(255,252,245,0.90)'; c.lineWidth=2.5; c.setLineDash([]);
     if (r.horiz) {
       _hLine(c,r.x0,r.y0+1.5,r.len); _hLine(c,r.x0,r.y0+r.h-1.5,r.len);
     } else {
       _vLine(c,r.x0+1.5,r.y0,r.len); _vLine(c,r.x0+r.w-1.5,r.y0,r.len);
     }
 
-    // Double-yellow center
-    c.strokeStyle='rgba(255,198,28,0.88)'; c.lineWidth=2;
-    if (r.horiz) {
-      _hLine(c,r.x0,r.yCen-3,r.len); _hLine(c,r.x0,r.yCen+3,r.len);
-    } else {
-      _vLine(c,r.xCen-3,r.y0,r.len); _vLine(c,r.xCen+3,r.y0,r.len);
+    // Double-yellow center (skip for wide roads that have green median)
+    if (r.lpd < 3) {
+      c.strokeStyle='rgba(255,205,30,0.92)'; c.lineWidth=2;
+      if (r.horiz) {
+        _hLine(c,r.x0,r.yCen-3,r.len); _hLine(c,r.x0,r.yCen+3,r.len);
+      } else {
+        _vLine(c,r.xCen-3,r.y0,r.len); _vLine(c,r.xCen+3,r.y0,r.len);
+      }
     }
 
-    // Dashed lane dividers
-    c.strokeStyle='rgba(235,228,205,0.5)'; c.lineWidth=1.5;
+    // Dashed lane dividers (white on lighter asphalt)
+    c.strokeStyle='rgba(255,252,245,0.55)'; c.lineWidth=1.5;
     for (var i=1; i<r.lpd*2; i++) {
       if (i===r.lpd) continue;
       if (r.horiz) {
@@ -390,17 +414,21 @@ function rBusStops(c) {
 // ── Trees ─────────────────────────────────────────────────────
 function rTrees(c) {
   wTrees.forEach(function(t) {
-    // Shadow
-    c.fillStyle='rgba(0,0,0,0.26)';
-    c.beginPath(); c.ellipse(t.x+3,t.y+4,t.r*0.85,t.r*0.65,0.4,0,Math.PI*2); c.fill();
-    // Canopy
-    var g=c.createRadialGradient(t.x-t.r*0.3,t.y-t.r*0.3,0,t.x,t.y,t.r);
-    g.addColorStop(0,t.a); g.addColorStop(0.65,t.b); g.addColorStop(1,'#0e2a08');
+    var r = t.r * 1.25; // trees appear larger in oblique view
+    // South shadow (cast direction matches oblique camera)
+    c.fillStyle='rgba(0,0,0,0.32)';
+    c.beginPath(); c.ellipse(t.x+4, t.y+r*0.75, r*0.72, r*0.42, 0.2, 0, Math.PI*2); c.fill();
+    // Canopy outer ring
+    c.fillStyle=t.b;
+    c.beginPath(); c.arc(t.x,t.y,r,0,Math.PI*2); c.fill();
+    // Canopy center (brighter)
+    var g=c.createRadialGradient(t.x-r*0.25,t.y-r*0.25,0,t.x,t.y,r);
+    g.addColorStop(0,t.a); g.addColorStop(0.55,t.b); g.addColorStop(1,'#122008');
     c.fillStyle=g;
-    c.beginPath(); c.arc(t.x,t.y,t.r,0,Math.PI*2); c.fill();
-    // Highlight
-    c.fillStyle='rgba(255,255,255,0.1)';
-    c.beginPath(); c.arc(t.x-t.r*0.28,t.y-t.r*0.28,t.r*0.3,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(t.x,t.y,r*0.88,0,Math.PI*2); c.fill();
+    // Top highlight
+    c.fillStyle='rgba(160,220,90,0.18)';
+    c.beginPath(); c.arc(t.x-r*0.22,t.y-r*0.22,r*0.38,0,Math.PI*2); c.fill();
   });
 }
 
