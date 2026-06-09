@@ -83,9 +83,8 @@ function startExamMode()   { startQuizWithQuestions(buildRandomQuestions(20), 'e
 function startHot20Quiz() {
   startQuizWithQuestions(HOT_20.map(h => ({
     cardNum: h.card, qNum: h.qn,
-    imgA: getCardImgUrl(h.card,'a'), imgB: getCardImgUrl(h.card,'b'),
     ans: h.ans, text: h.text, opts: h.opts, why: h.why,
-    isImageBased: true
+    isImageBased: false  // HOT_20 has verified text+options — don't show card image panel
   })), 'practice');
 }
 
@@ -123,8 +122,10 @@ function renderQuestion() {
   document.getElementById('q-prog-fill').style.width = ((quizState.current)/total*100)+'%';
   document.getElementById('q-counter').textContent = `${quizState.current+1}/${total}`;
 
-  const isHot = q.opts !== undefined;
-  const opts = isHot ? q.opts : ['А хариулт','Б хариулт','В хариулт','Г хариулт'];
+  // isVerified = question has a written explanation (HOT_20 only) → show typed text+options
+  // card-based questions show the image panel and plain А/Б/В/Г buttons
+  const isVerified = !!q.why;
+  const opts = isVerified ? q.opts : ['','','',''];
   const labels = ['А','Б','В','Г'];
 
   // Show only the relevant image page: А (questions 1-10) or Б (questions 11-20)
@@ -156,23 +157,26 @@ function renderQuestion() {
 
   let optsHtml = '';
   opts.forEach((opt, i) => {
-    let cls = 'q-opt';
+    let cls = 'q-opt' + (isVerified ? '' : ' img-opt');
     const disabled = alreadyAnswered ? 'disabled' : '';
     if (alreadyAnswered) {
       if (i === q.ans) cls += ' correct';
       else if (i === quizState.answers[quizState.current] && i !== q.ans) cls += ' wrong';
     }
+    const optLabel = isVerified ? opt : `${i+1}-р хариулт`;
     optsHtml += `<button class="${cls}" onclick="answerQ(${i})" ${disabled}>
-      <span class="opt-key">${labels[i]}</span>${opt}
+      <span class="opt-key">${labels[i]}</span>${optLabel}
     </button>`;
   });
 
   let explHtml = '';
   if (alreadyAnswered) {
     const ok = quizState.answers[quizState.current] === q.ans;
-    const why = isHot ? (q.why || '') : (ok
-      ? `✓ Зөв! "${labels[q.ans]}" хариулт зөв байна.`
-      : `Зөв хариулт: "${labels[q.ans]}". Картын ${pageLabel}-ийн ${q.qNum}-р асуултыг дахин анхааралтай харна уу.`);
+    const why = isVerified
+      ? (q.why || (ok ? `✓ Зөв! "${labels[q.ans]}" хариулт.` : `Зөв хариулт: "${labels[q.ans]}".`))
+      : (ok
+          ? `✓ Зөв! Зургийн ${q.ans+1}-р хариулт (${labels[q.ans]}) зөв байна.`
+          : `✗ Зөв хариулт: ${labels[q.ans]} (зургийн ${q.ans+1}-р хариулт). Зургаас дахин шалгана уу.`);
     explHtml = `<div class="q-explain show" style="${ok
       ? '--explain-c:var(--green);--explain-bg:rgba(34,197,94,0.06)'
       : '--explain-c:var(--red);--explain-bg:rgba(239,68,68,0.06)'}">
@@ -180,9 +184,9 @@ function renderQuestion() {
     </div>`;
   }
 
-  const qText = isHot
+  const qText = isVerified
     ? q.text
-    : `Карт ${q.cardNum} — <strong>${pageLabel}</strong> зургаас <strong>${q.qNum}-р асуулт</strong>-ын зөв хариулт сонгоно уу.`;
+    : `<span style="opacity:.55;font-size:.85rem">Зурагт харагдах <strong>${q.qNum}-р асуулт</strong>-ын зөв хариултыг сонгоно уу &nbsp;(А=1, Б=2, В=3, Г=4)</span>`;
 
   document.getElementById('q-wrap').innerHTML = `
     <div class="q-card-label">КАРТ #${q.cardNum} &nbsp;·&nbsp; АСУУЛТ ${q.qNum} / 20 &nbsp;·&nbsp; ${pageLabel}</div>

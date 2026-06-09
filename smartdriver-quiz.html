@@ -179,6 +179,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height
   color:var(--red);
   --opt-c:var(--red);
 }
+/* Image-based card: 2×2 grid layout */
+.q-options:has(.img-opt){display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+.img-opt{justify-content:center;font-size:1rem;font-weight:700;min-height:52px}
 .opt-key{
   width:26px;height:26px;border-radius:50%;
   background:rgba(255,255,255,0.07);
