@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartDriver UB — Дүрмийн Тест</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══════════ MENU ══════════ -->
+<div id="menu-screen">
+  <div class="logo-mark">SMART<span>DRIVER</span></div>
+  <div class="logo-sub">Замын хөдөлгөөний дүрмийн тест · Mongolia</div>
+  <div class="menu-modes">
+    <div class="mode-card" style="--hover-c:#ef4444;--hover-bg:rgba(239,68,68,0.04)" onclick="showHot20()">
+      <span class="mc-badge badge-hot">🔥 ТҮГЭЭМЭЛ</span>
+      <div class="mc-icon">🎯</div>
+      <div class="mc-title">Түгээмэл 20 Асуулт</div>
+      <div class="mc-desc">Шалгалтанд хамгийн байнга гардаг 20 асуулт. Эхлэхийн өмнө заавал үзэх!</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#22c55e;--hover-bg:rgba(34,197,94,0.04)" onclick="startRandomQuiz()">
+      <span class="mc-badge badge-new">PRACTICE</span>
+      <div class="mc-icon">🎲</div>
+      <div class="mc-title">Санамсаргүй Тест</div>
+      <div class="mc-desc">40 картаас санамсаргүй 20 асуулт. Тайлбартай, зурагтай. Дадлага хийх.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#3b82f6;--hover-bg:rgba(59,130,246,0.04)" onclick="showCardSelect()">
+      <span class="mc-badge badge-all">КАРТ 1–40</span>
+      <div class="mc-icon">📋</div>
+      <div class="mc-title">Картаар Сонгох</div>
+      <div class="mc-desc">40 карт бүрийг зурагтайгаар үзэх. Тус бүр 20 асуулт, зөв хариулт бүртэй.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#f59e0b;--hover-bg:rgba(245,158,11,0.04)" onclick="startExamMode()">
+      <span class="mc-badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">EXAM</span>
+      <div class="mc-icon">⏱️</div>
+      <div class="mc-title">Шалгалтын Горим</div>
+      <div class="mc-desc">Бодит шалгалттай ижил. 20 асуулт, 20 минут. Тайлбар харагдахгүй.</div>
+    </div>
+    <div class="mode-card" style="--hover-c:#a855f7;--hover-bg:rgba(168,85,247,0.04)" onclick="showSimulator()">
+      <span class="mc-badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3)">🎮 ШИНЭ</span>
+      <div class="mc-icon">🚗</div>
+      <div class="mc-title">Виртуал Жолоодлого</div>
+      <div class="mc-desc">Улаанбаатарын замд жолоо барих дадлага. 6 сценари. WASD товч ашиглана.</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-n">40</div><div class="stat-l">Карт</div></div>
+    <div class="stat-item"><div class="stat-n">800</div><div class="stat-l">Асуулт</div></div>
+    <div class="stat-item"><div class="stat-n">6</div><div class="stat-l">Сценари</div></div>
+    <div class="stat-item"><div class="stat-n" id="menu-done">0</div><div class="stat-l">Тест өгсөн</div></div>
+  </div>
+  <div style="margin-top:1.5rem;font-family:var(--font-m);font-size:0.65rem;color:rgba(240,238,234,0.2);letter-spacing:0.1em">
+    Тест: А Б В Г товч · Дараагийн: Space/Enter · Симулятор: WASD / ← ↑ ↓ →
+  </div>
+</div>
+
+<!-- ══════════ CARD SELECT ══════════ -->
+<div id="card-select-screen">
+  <button class="back-btn" onclick="showMenu()">← Буцах</button>
+  <div class="cs-title">Карт сонгох</div>
+  <div class="cs-sub">Карт бүр 2 зурагтай, 20 асуултай. Зурагнаас харж хариулна уу.</div>
+  <div class="card-grid" id="card-grid"></div>
+</div>
+
+<!-- ══════════ HOT 20 ══════════ -->
+<div id="hot20-screen">
+  <button class="back-btn" onclick="showMenu()">← Буцах</button>
+  <div class="cs-title">🔥 Шалгалтанд Хамгийн Байнга Гардаг 20 Асуулт</div>
+  <div class="cs-sub" style="margin-bottom:1.5rem">Олон картад давтагддаг, оноо авах магадлал өндөр асуултууд.</div>
+  <div id="hot20-list"></div>
+  <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap">
+    <button class="btn-retry" onclick="startHot20Quiz()">🎯 Эдгээрийг тест өгөх</button>
+    <button class="btn-menu" onclick="showMenu()">Буцах</button>
+  </div>
+</div>
+
+<!-- ══════════ QUIZ ══════════ -->
+<div id="quiz-screen">
+  <div class="quiz-header">
+    <button class="quiz-back" onclick="confirmExit()">✕</button>
+    <div class="quiz-progress-track"><div class="quiz-progress-fill" id="q-prog-fill"></div></div>
+    <div class="quiz-counter" id="q-counter">1/20</div>
+    <div class="quiz-timer" id="q-timer" style="display:none">20:00</div>
+  </div>
+  <div class="dot-track" id="dot-track"></div>
+  <div class="q-wrap" id="q-wrap"></div>
+</div>
+
+<!-- ══════════ RESULT ══════════ -->
+<div id="result-screen">
+  <div class="result-ring" id="result-ring">
+    <div class="result-big" id="result-big">0</div>
+    <div class="result-of" id="result-of">/20</div>
+  </div>
+  <div class="result-title" id="result-title">Дүн</div>
+  <div class="result-sub" id="result-sub">Та шалгалтыг өглөө</div>
+  <div class="result-grid">
+    <div class="rg-item"><div class="rg-n" id="rg-ok" style="color:var(--green)">0</div><div class="rg-l">Зөв</div></div>
+    <div class="rg-item"><div class="rg-n" id="rg-fail" style="color:var(--red)">0</div><div class="rg-l">Буруу</div></div>
+    <div class="rg-item"><div class="rg-n" id="rg-time">—</div><div class="rg-l">Хугацаа</div></div>
+  </div>
+  <div class="wrong-list" id="wrong-list"></div>
+  <div class="result-actions" id="result-actions">
+    <button class="btn-retry" id="btn-retry" onclick="retryQuiz()">🔄 Дахин өгөх</button>
+    <button class="btn-menu" onclick="showMenu()">← Цэс рүү</button>
+  </div>
+</div>
+
+<!-- ══════════ SIMULATOR SCENARIO SELECT ══════════ -->
+<div id="sim-scenario-screen" style="display:none;background:#0a0a10;min-height:100vh;padding:2rem;flex-direction:column">
+  <button class="back-btn" onclick="showMenu()" style="color:#6b6880">← Буцах</button>
+  <div style="font-family:var(--font-m);font-size:0.7rem;color:#f5c842;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem">// ВИРТУАЛ ЖОЛООДЛОГО</div>
+  <div style="font-weight:900;font-size:1.8rem;color:#f0eeea;margin-bottom:0.3rem">Сценари сонгох</div>
+  <div style="color:#6b6880;font-size:0.85rem;margin-bottom:0.3rem">WASD эсвэл ← ↑ ↓ → товч ашиглана. Мобайлд доорх товчлуурыг ашиглана.</div>
+  <div style="font-family:var(--font-m);font-size:0.68rem;color:rgba(245,200,66,0.6);margin-bottom:1.5rem">⌨ W/↑ газ · S/↓ гальмуур · A/↑ зүүн · D/→ баруун · Space зогсоо/үргэлжлүүл</div>
+  <div class="sc-grid" id="sc-grid"></div>
+</div>
+
+<!-- ══════════ SIMULATOR PLAY ══════════ -->
+<div id="sim-screen" style="display:none;background:#0a0a10;min-height:100vh;flex-direction:column">
+  <div class="sim-topbar">
+    <button class="sim-back" onclick="exitSim()">✕</button>
+    <div class="sim-sep">|</div>
+    <div class="sim-title" id="sim-sc-title">—</div>
+    <div class="sim-sep">|</div>
+    <div class="sim-task-label" id="sim-task-txt">—</div>
+    <div class="sim-score-hud">Оноо: <span id="sim-score-disp">100</span></div>
+  </div>
+  <div class="sim-canvas-wrap" style="position:relative;flex:1;background:#0a0a10;display:flex;flex-direction:column">
+    <canvas id="sim-canvas" style="display:block;width:100%;max-height:500px"></canvas>
+    <div id="sim-hud" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;padding:0.8rem;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="hud-minimap" id="sim-minimap"></div>
+        <div id="sim-sign-popup" class="hud-sign-popup" style="display:none">
+          <div style="font-size:1.6rem;text-align:center" id="popup-icon">⚠️</div>
+          <div style="font-family:var(--font-m);font-size:0.68rem;color:#f5c842;text-align:center;margin-top:2px" id="popup-name">—</div>
+          <div style="font-size:0.72rem;color:rgba(240,238,234,0.7);margin-top:4px;text-align:center" id="popup-rule">—</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div class="hud-box">
+          <div class="hud-speed-num" id="hud-speed">0</div>
+          <div class="hud-speed-unit">КМ/ЦАГ</div>
+          <div class="hud-speed-bar"><div class="hud-speed-fill" id="hud-speed-fill"></div></div>
+        </div>
+        <div id="hud-alert" class="hud-alert"></div>
+        <div class="hud-box" style="text-align:center">
+          <div style="font-family:var(--font-m);font-size:0.6rem;color:rgba(240,238,234,0.3);letter-spacing:0.1em">ДАМЖ</div>
+          <div class="hud-gear" id="hud-gear">N</div>
+        </div>
+      </div>
+    </div>
+    <div id="sim-result-overlay">
+      <div class="sro-emoji" id="sro-emoji">🏆</div>
+      <div class="sro-title" id="sro-title">Маш сайн!</div>
+      <div class="sro-sub" id="sro-sub">Дасгалыг амжилттай дуусгалаа</div>
+      <div class="sro-stats">
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-score" style="color:#22c55e">100</div><div class="sro-stat-l">Оноо</div></div>
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-errors" style="color:#ef4444">0</div><div class="sro-stat-l">Алдаа</div></div>
+        <div class="sro-stat"><div class="sro-stat-n" id="sro-time" style="color:#f5c842">0с</div><div class="sro-stat-l">Цаг</div></div>
+      </div>
+      <div class="sro-btns">
+        <button class="btn-retry" onclick="simRestart()">🔄 Дахин</button>
+        <button class="btn-menu" onclick="showSimulator()">← Сценари</button>
+        <button class="btn-menu" onclick="showMenu()">Цэс</button>
+      </div>
+    </div>
+  </div>
+  <div class="mob-ctrl" id="mob-ctrl" style="background:#111118;border-top:1px solid #2a2a38;padding:0.6rem">
+    <div class="mob-row">
+      <div style="width:48px"></div>
+      <button class="mob-btn" ontouchstart="simKeys['ArrowUp']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowUp']=false;this.classList.remove('pressed')">▲</button>
+      <div style="width:48px"></div>
+    </div>
+    <div class="mob-row">
+      <button class="mob-btn" ontouchstart="simKeys['ArrowLeft']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowLeft']=false;this.classList.remove('pressed')">◀</button>
+      <button class="mob-btn" ontouchstart="simKeys['ArrowDown']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowDown']=false;this.classList.remove('pressed')">▼</button>
+      <button class="mob-btn" ontouchstart="simKeys['ArrowRight']=true;this.classList.add('pressed')" ontouchend="simKeys['ArrowRight']=false;this.classList.remove('pressed')">▶</button>
+    </div>
+  </div>
+  <div class="sim-botbar">
+    <div style="display:flex;gap:0.5rem">
+      <button class="sim-btn" id="sim-pause-btn" onclick="toggleSimPause()">⏸ Зогсоох</button>
+      <button class="sim-btn" onclick="simRestart()">🔄 Дахин</button>
+      <button class="sim-btn" onclick="exitSim()">✕ Гарах</button>
+    </div>
+    <div class="sim-keys">
+      <span>W/↑ Газ</span><span>S/↓ Гальмуур</span><span>A/← Зүүн</span><span>D/→ Баруун</span><span>Space Зогс</span>
+    </div>
+  </div>
+  <div class="sim-log-bar" id="sim-log">Симулятор бэлэн...</div>
+</div>
+
+<!-- IMAGE ZOOM -->
+<div id="img-zoom" onclick="closeZoom()"><img id="zoom-img" src="" alt=""></div>
+<div id="focus-flash"></div>
+
+<!-- JS: дараалал чухал — data → quiz → simulator → app -->
+<script src="js/data.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/simulator.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
