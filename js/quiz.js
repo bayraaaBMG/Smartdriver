@@ -206,10 +206,9 @@ function renderQuestion() {
       const load = document.getElementById('load-'+canvasId);
       if (!cv) return;
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       img.onload = function() {
-        const pw = img.width / 2;
-        const ph = img.height / 5;
+        const pw = img.naturalWidth / 2;
+        const ph = img.naturalHeight / 5;
         cv.width  = pw;
         cv.height = ph;
         cv.getContext('2d').drawImage(img, panelCol*pw, panelRow*ph, pw, ph, 0, 0, pw, ph);
