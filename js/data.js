@@ -197,24 +197,30 @@ function loadImgWithFallback(imgEl, originalUrl, proxyIdx = 0) {
 function getCardQuestions(cardNum) {
   if (CARD_DATA[cardNum]) {
     const cd = CARD_DATA[cardNum];
-    return cd.q.map((q, i) => ({
+    return cd.q.map((q, i) => {
+      const a = cd.ans[i] - 1;
+      return {
+        cardNum, qNum: i+1,
+        imgA: `${IMG_BASE}${cardNum}a.jpg`,
+        imgB: `${IMG_BASE}${cardNum}b.jpg`,
+        ans: a,
+        optionCount: a >= 3 ? 4 : 3,
+        isImageBased: true
+      };
+    });
+  }
+  const ans = CARD_ANSWERS[cardNum];
+  return Array.from({length:20}, (_, i) => {
+    const a = ans[i] - 1;
+    return {
       cardNum, qNum: i+1,
       imgA: `${IMG_BASE}${cardNum}a.jpg`,
       imgB: `${IMG_BASE}${cardNum}b.jpg`,
-      ans: cd.ans[i] - 1,
-      text: q.t, opts: q.o, isImageBased: true
-    }));
-  }
-  const ans = CARD_ANSWERS[cardNum];
-  return Array.from({length:20}, (_,i) => ({
-    cardNum, qNum: i+1,
-    imgA: `${IMG_BASE}${cardNum}a.jpg`,
-    imgB: `${IMG_BASE}${cardNum}b.jpg`,
-    ans: ans[i]-1,
-    text: `Карт ${cardNum} — Зургийг сайн харж ${i+1}-р асуултын зөв хариултыг сонгоно уу.`,
-    opts: ['А хариулт','Б хариулт','В хариулт','Г хариулт'],
-    isImageBased: true
-  }));
+      ans: a,
+      optionCount: a >= 3 ? 4 : 3,
+      isImageBased: true
+    };
+  });
 }
 
 // ═══════════════════════════════════════════════════

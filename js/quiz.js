@@ -122,11 +122,11 @@ function renderQuestion() {
   document.getElementById('q-prog-fill').style.width = ((quizState.current)/total*100)+'%';
   document.getElementById('q-counter').textContent = `${quizState.current+1}/${total}`;
 
-  // isVerified = question has a written explanation (HOT_20 only) → show typed text+options
-  // card-based questions show the image panel and plain А/Б/В/Г buttons
+  // isVerified = HOT_20 question with typed+verified text, options, explanation
+  // image-based = show only the cropped image + numbered buttons matching option count
   const isVerified = !!q.why;
-  const opts = isVerified ? q.opts : ['','','',''];
   const labels = ['А','Б','В','Г'];
+  const imgOptCount = q.optionCount || 3;
 
   // Show only the relevant image page: А (questions 1-10) or Б (questions 11-20)
   const isPageA = q.qNum <= 10;
@@ -156,28 +156,43 @@ function renderQuestion() {
   const alreadyAnswered = quizState.answers[quizState.current] !== null;
 
   let optsHtml = '';
-  opts.forEach((opt, i) => {
-    let cls = 'q-opt' + (isVerified ? '' : ' img-opt');
-    const disabled = alreadyAnswered ? 'disabled' : '';
-    if (alreadyAnswered) {
-      if (i === q.ans) cls += ' correct';
-      else if (i === quizState.answers[quizState.current] && i !== q.ans) cls += ' wrong';
+  if (isVerified) {
+    // HOT_20: А/Б/В/Г + typed option text
+    q.opts.forEach((opt, i) => {
+      let cls = 'q-opt';
+      const disabled = alreadyAnswered ? 'disabled' : '';
+      if (alreadyAnswered) {
+        if (i === q.ans) cls += ' correct';
+        else if (i === quizState.answers[quizState.current] && i !== q.ans) cls += ' wrong';
+      }
+      optsHtml += `<button class="${cls}" onclick="answerQ(${i})" ${disabled}>
+        <span class="opt-key">${labels[i]}</span>${opt}
+      </button>`;
+    });
+  } else {
+    // Image-based: numbered buttons only — count matches image option count
+    for (let i = 0; i < imgOptCount; i++) {
+      let cls = 'q-opt num-opt';
+      const disabled = alreadyAnswered ? 'disabled' : '';
+      if (alreadyAnswered) {
+        if (i === q.ans) cls += ' correct';
+        else if (i === quizState.answers[quizState.current] && i !== q.ans) cls += ' wrong';
+      }
+      optsHtml += `<button class="${cls}" onclick="answerQ(${i})" ${disabled}>
+        <span class="opt-num">${i+1}</span><span class="opt-num-lbl">${i+1}-р сонголт</span>
+      </button>`;
     }
-    const optLabel = isVerified ? opt : `${i+1}-р хариулт`;
-    optsHtml += `<button class="${cls}" onclick="answerQ(${i})" ${disabled}>
-      <span class="opt-key">${labels[i]}</span>${optLabel}
-    </button>`;
-  });
+  }
 
   let explHtml = '';
   if (alreadyAnswered) {
     const ok = quizState.answers[quizState.current] === q.ans;
     const why = isVerified
-      ? (q.why || (ok ? `✓ Зөв! "${labels[q.ans]}" хариулт.` : `Зөв хариулт: "${labels[q.ans]}".`))
+      ? (q.why || (ok ? '' : `Зөв хариулт: "${labels[q.ans]}".`))
       : (ok
-          ? `✓ Зөв! Зургийн ${q.ans+1}-р хариулт (${labels[q.ans]}) зөв байна.`
-          : `✗ Зөв хариулт: ${labels[q.ans]} (зургийн ${q.ans+1}-р хариулт). Зургаас дахин шалгана уу.`);
-    explHtml = `<div class="q-explain show" style="${ok
+          ? `✓ Зөв! Зурагт харагдах ${q.ans+1}-р сонголт зөв байна.`
+          : `✗ Зөв хариулт: ${q.ans+1}-р сонголт. Зургаас дахин харна уу.`);
+    if (why) explHtml = `<div class="q-explain show" style="${ok
       ? '--explain-c:var(--green);--explain-bg:rgba(34,197,94,0.06)'
       : '--explain-c:var(--red);--explain-bg:rgba(239,68,68,0.06)'}">
       <span class="q-explain-icon">${ok ? '✓' : '✗'}</span><span>${why}</span>
@@ -186,7 +201,7 @@ function renderQuestion() {
 
   const qText = isVerified
     ? q.text
-    : `<span style="opacity:.55;font-size:.85rem">Зурагт харагдах <strong>${q.qNum}-р асуулт</strong>-ын зөв хариултыг сонгоно уу &nbsp;(А=1, Б=2, В=3, Г=4)</span>`;
+    : `<span style="opacity:.38;font-size:.78rem;letter-spacing:.04em">${q.cardNum}-р карт · ${q.qNum}-р асуулт</span>`;
 
   document.getElementById('q-wrap').innerHTML = `
     <div class="q-card-label">КАРТ #${q.cardNum} &nbsp;·&nbsp; АСУУЛТ ${q.qNum} / 20 &nbsp;·&nbsp; ${pageLabel}</div>

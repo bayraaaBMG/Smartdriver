@@ -179,9 +179,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height
   color:var(--red);
   --opt-c:var(--red);
 }
-/* Image-based card: 2×2 grid layout */
-.q-options:has(.img-opt){display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
-.img-opt{justify-content:center;font-size:1rem;font-weight:700;min-height:52px}
+/* Numbered option buttons for image-based questions */
+.num-opt{gap:.75rem;min-height:52px}
+.opt-num{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:rgba(245,200,66,.10);border:1.5px solid rgba(245,200,66,.22);
+  font-family:var(--font-m);font-size:1rem;font-weight:900;color:var(--accent);
+  display:inline-flex;align-items:center;justify-content:center;transition:background .12s;
+}
+.num-opt:hover:not(:disabled) .opt-num{background:rgba(245,200,66,.22)}
+.num-opt.correct .opt-num{background:var(--green);border-color:var(--green);color:#fff}
+.num-opt.wrong .opt-num{background:var(--red);border-color:var(--red);color:#fff}
+.opt-num-lbl{font-size:.92rem;font-weight:600;color:var(--text-muted)}
 .opt-key{
   width:26px;height:26px;border-radius:50%;
   background:rgba(255,255,255,0.07);
